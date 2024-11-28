@@ -1,22 +1,47 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppGateway } from './app.gateway';
 import { HttpModule } from '@nestjs/axios';
 import { ServicesModule } from './services.module';
 import { AppController } from './app.controller';
 import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { RateLimitMiddleware } from './middlewares/rate-limit.middleware';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { RateLimitGuards } from './guards/rate-limit.guards';
+import { ControllersModule } from './controllers.module';
+import { ConfigModule } from '@nestjs/config';
+import { AppService } from './app.service';
 
 @Module({
-  imports: [HttpModule, ServicesModule, CacheModule.register()],
+  imports: [
+    HttpModule,
+    ServicesModule,
+    CacheModule.register(),
+    ConfigModule.forRoot({
+      envFilePath: ['src/environments/local.env'],
+      isGlobal: true,
+    }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
+    ControllersModule,
+  ],
   controllers: [AppController],
   providers: [
     AppGateway,
+    AppService,
     { provide: APP_INTERCEPTOR, useClass: CacheInterceptor },
+    { provide: APP_GUARD, useClass: RateLimitGuards },
   ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RateLimitMiddleware).forRoutes('*');
-  }
+export class AppModule {
+  /**
+   * Config rate limit using cache. Should implement NestModule
+   * @type any
+   */
+  // configure(consumer: MiddlewareConsumer) {
+  //   consumer.apply(RateLimitMiddleware).forRoutes('*');
+  // }
 }

@@ -6,10 +6,11 @@ import {
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
-import { Socket } from 'socket.io';
-import { FirebaseService } from './services/firebase.service';
+import { Server, Socket } from 'socket.io';
+import { SystemService } from './services/system.service';
 
 @WebSocketGateway({
   cors: {
@@ -20,9 +21,11 @@ import { FirebaseService } from './services/firebase.service';
 export class AppGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
+  @WebSocketServer()
+  server: Server;
   private readonly logger = new Logger(AppGateway.name);
 
-  constructor(protected eventService: FirebaseService) {}
+  constructor(private readonly systemService: SystemService) {}
 
   afterInit(): void {
     this.logger.log('WebSocket Gateway Initialized');
@@ -48,10 +51,7 @@ export class AppGateway
     client.emit('response', { success: true, message: 'Message received' });
   }
 
-  @SubscribeMessage('all-events')
-  getAllEvents(@ConnectedSocket() client: Socket): void {
-    this.eventService.getAllEvents().subscribe((res) => {
-      client.emit('all-events', JSON.stringify(res));
-    });
+  sendMessage(event: string, data: string) {
+    this.server.emit(event, data);
   }
 }

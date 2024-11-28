@@ -16,7 +16,7 @@ export class RateLimitMiddleware implements NestMiddleware {
 
   constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
 
-  async use(req: any, res: any, next: (error?: any) => void): Promise<any> {
+  async use(req: any, _: any, next: (error?: any) => void): Promise<any> {
     const userIp = req.ip;
     let requestCount = await this.cacheManager.get<number>(
       `${userIp}-ratelimit`,
@@ -26,7 +26,7 @@ export class RateLimitMiddleware implements NestMiddleware {
       requestCount = await this.cacheManager.get<number>(`${userIp}-ratelimit`);
     }
     if (requestCount >= this.REQUEST_LIMIT) {
-      throw new BadRequestException('Too many requests');
+      throw new BadRequestException();
     }
 
     await this.cacheManager.set(`${userIp}-ratelimit`, requestCount + 1);
