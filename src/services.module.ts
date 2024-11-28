@@ -5,9 +5,11 @@ import { HttpModule } from '@nestjs/axios';
 import { CacheModule } from '@nestjs/cache-manager';
 import { SystemService } from './services/system.service';
 
+const services = [FirebaseService, UtilsService, SystemService];
+
 @Module({
   imports: [HttpModule, CacheModule.register()],
-  providers: [FirebaseService, UtilsService, SystemService],
-  exports: [FirebaseService, UtilsService, SystemService],
+  providers: services,
+  exports: services,
 })
 export class ServicesModule {}
