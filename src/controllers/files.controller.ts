@@ -1,8 +1,8 @@
 import {
   Controller,
   Get,
+  Param,
   Post,
-  Query,
   StreamableFile,
   UploadedFiles,
   UseInterceptors,
@@ -20,8 +20,10 @@ import { UtilsService } from '../shared/utils.service';
   path: '/api/files',
 })
 export class FilesController {
-  protected readonly folderPath =
-    this.configService.get<string>('UPLOAD_FOLDER');
+  protected readonly folderPath = path.join(
+    process.cwd(),
+    this.configService.get<string>('UPLOAD_FOLDER'),
+  );
 
   constructor(
     private readonly configService: ConfigService,
@@ -38,7 +40,6 @@ export class FilesController {
 
         return {
           name: file,
-          path: filePath,
           size: this.utils.convertCapacity(stats.size),
           isFile: stats.isFile(),
           isDirectory: stats.isDirectory(),
@@ -47,13 +48,16 @@ export class FilesController {
         };
       });
     } catch (error) {
-      throw new Error(`Error reading files: ${error}`);
+      console.log(error);
+      return [];
     }
   }
 
-  @Get()
-  getFile(@Query('fileName') fileName: string) {
-    const file = fs.createReadStream(path.join(process.cwd(), 'package.json'));
+  @Get(':fileName')
+  downloadFile(@Param('fileName') fileName: string) {
+    const file = fs.createReadStream(
+      `${this.folderPath}/${decodeURI(fileName)}`,
+    );
     const extension = fileName.split('.').pop();
     return new StreamableFile(file, {
       type: FileTypes[extension],

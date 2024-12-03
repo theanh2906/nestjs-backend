@@ -10,6 +10,7 @@ import { RateLimitGuards } from './guards/rate-limit.guards';
 import { ControllersModule } from './controllers.module';
 import { ConfigModule } from '@nestjs/config';
 import { AppService } from './app.service';
+import * as process from 'node:process';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { AppService } from './app.service';
     ServicesModule,
     CacheModule.register(),
     ConfigModule.forRoot({
-      envFilePath: ['src/environments/local.env'],
+      envFilePath: `src/environments/${process.env.NODE_ENV}.env`,
       isGlobal: true,
     }),
     ThrottlerModule.forRoot([

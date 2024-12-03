@@ -37,7 +37,7 @@ export class AppGateway
   }
 
   handleDisconnect(client: Socket): void {
-    this.logger.log(`Client disconnected: ${client.id}`);
+    this.logger.log(`Client disconnected: ${client.handshake.query.userId}`);
   }
 
   @SubscribeMessage('message')
@@ -50,6 +50,15 @@ export class AppGateway
     );
     client.emit('response', { success: true, message: 'Message received' });
   }
+
+  // @SubscribeMessage('delete-files')
+  // handleDeleteFiles(
+  //   @MessageBody() message: any,
+  //   @ConnectedSocket() client: Socket,
+  // ): void {
+  //   const listFileNames = JSON.parse(message) as string[];
+  //   console.log(listFileNames);
+  // }
 
   sendMessage(event: string, data: string) {
     this.server.emit(event, data);
