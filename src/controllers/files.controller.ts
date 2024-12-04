@@ -28,7 +28,9 @@ export class FilesController {
   constructor(
     private readonly configService: ConfigService,
     private readonly utils: UtilsService,
-  ) {}
+  ) {
+    console.log(process.cwd());
+  }
 
   @Get()
   getAllFilesInfo() {
