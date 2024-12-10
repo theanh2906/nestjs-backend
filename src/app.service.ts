@@ -9,10 +9,6 @@ export class AppService {
     private readonly systemService: SystemService,
   ) {}
 
-  getHello(): string {
-    return 'Hello World!';
-  }
-
   startMonitoring() {
     setInterval(() => {
       this.gateway.sendMessage(

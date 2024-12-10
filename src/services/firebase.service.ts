@@ -1,21 +1,35 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { map, Observable } from 'rxjs';
-import { HttpService } from '@nestjs/axios';
-import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
+import { BaseService } from '../shared/base.service';
+import * as admin from 'firebase-admin';
+import { v4 as uuid } from 'uuid';
+import { AppGateway } from '../app.gateway';
 
 @Injectable()
-export class FirebaseService {
-  private readonly apiUrl =
-    'https://useful-tools-api-default-rtdb.firebaseio.com';
+export class FirebaseService extends BaseService {
+  protected COLLECTION_NAME = '';
+  private database: admin.database.Database;
 
   constructor(
-    private readonly httpService: HttpService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+    @Inject('FIREBASE_ADMIN') protected readonly firebaseApp: admin.app.App,
+    private appGateway: AppGateway,
+  ) {
+    super();
+    this.database = firebaseApp.database();
+  }
 
-  getAllEvents(): Observable<any> {
-    return this.httpService
-      .get<any>(`${this.apiUrl}/events.json`)
-      .pipe(map((resData) => resData.data));
+  async fetchData(): Promise<any> {
+    const snapshot = await this.database
+      .ref(this.COLLECTION_NAME)
+      .once('value');
+    this.appGateway.sendMessage('all-events', snapshot.val());
+    return snapshot.val();
+  }
+
+  async modifyData(data: any): Promise<void> {
+    await this.database.ref(this.COLLECTION_NAME + `/${uuid()}`).set(data);
+  }
+
+  async deleteData(id: string): Promise<any> {
+    await this.database.ref(this.COLLECTION_NAME + `/${id}`).remove();
   }
 }

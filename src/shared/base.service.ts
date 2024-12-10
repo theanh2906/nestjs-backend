@@ -1,9 +1,3 @@
-import { HttpService } from '@nestjs/axios';
-import { UtilsService } from './utils.service';
+import { AppLogger } from './logger';
 
-export class BaseService {
-  constructor(
-    protected httpService: HttpService,
-    protected utils: UtilsService,
-  ) {}
-}
+export class BaseService extends AppLogger {}

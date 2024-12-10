@@ -15,11 +15,12 @@ import { ConfigService } from '@nestjs/config';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { UtilsService } from '../shared/utils.service';
+import { BaseController } from '../shared/base.controller';
 
 @Controller({
   path: '/api/files',
 })
-export class FilesController {
+export class FilesController extends BaseController {
   protected readonly folderPath = path.join(
     process.cwd(),
     this.configService.get<string>('UPLOAD_FOLDER'),
@@ -29,7 +30,8 @@ export class FilesController {
     private readonly configService: ConfigService,
     private readonly utils: UtilsService,
   ) {
-    console.log(process.cwd());
+    super();
+    this.logger.log(process.cwd());
   }
 
   @Get()
