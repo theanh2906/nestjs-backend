@@ -7,7 +7,9 @@ export class AppService {
   constructor(
     private readonly gateway: AppGateway,
     private readonly systemService: SystemService,
-  ) {}
+  ) {
+    this.startMonitoring();
+  }
 
   startMonitoring() {
     setInterval(() => {

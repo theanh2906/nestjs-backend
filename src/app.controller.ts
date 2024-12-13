@@ -3,8 +3,8 @@ import { AppService } from './app.service';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import { SystemService } from './services/system.service';
 import { SkipThrottle } from '@nestjs/throttler';
-import { EventsService } from './services/events.service';
 import { BaseController } from './shared/base.controller';
+import { NotesService } from './services/notes.service';
 
 @Controller()
 export class AppController extends BaseController {
@@ -14,11 +14,9 @@ export class AppController extends BaseController {
     private readonly appService: AppService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly systemService: SystemService,
-    private readonly eventsService: EventsService,
+    private readonly notesService: NotesService,
   ) {
     super();
-    this.appService.startMonitoring();
-    this.eventsService.fetchData().then((res) => this.logger.log(res));
   }
 
   @Get()

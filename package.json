@@ -37,6 +37,8 @@
     "@nestjs/terminus": "^10.2.3",
     "@nestjs/throttler": "^6.2.1",
     "@nestjs/websockets": "^10.4.8",
+    "adm-zip": "^0.5.16",
+    "archiver": "^7.0.1",
     "axios": "^1.7.7",
     "bullmq": "^5.28.1",
     "cache-manager": "^5.7.6",
@@ -44,6 +46,7 @@
     "dotenv": "^16.4.5",
     "firebase": "^11.0.2",
     "firebase-admin": "^13.0.1",
+    "jszip": "^3.10.1",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "uuid": "^11.0.3"

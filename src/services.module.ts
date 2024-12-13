@@ -11,8 +11,17 @@ import process from 'node:process';
 import serviceAccount from '../serviceAccountKey.json';
 import { ServiceAccount } from 'firebase-admin/lib/app';
 import { AppGateway } from './app.gateway';
+import { NotesService } from './services/notes.service';
+import { FileService } from './services/file.service';
 
-const services = [FirebaseService, UtilsService, SystemService, EventsService];
+const services = [
+  FirebaseService,
+  UtilsService,
+  SystemService,
+  EventsService,
+  NotesService,
+  FileService,
+];
 
 @Module({
   imports: [HttpModule, CacheModule.register()],
