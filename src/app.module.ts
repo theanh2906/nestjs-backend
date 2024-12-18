@@ -11,6 +11,8 @@ import { ControllersModule } from './controllers.module';
 import { ConfigModule } from '@nestjs/config';
 import { AppService } from './app.service';
 import * as process from 'node:process';
+import { MulterModule } from '@nestjs/platform-express';
+import multer from 'multer';
 
 @Module({
   imports: [
@@ -28,6 +30,9 @@ import * as process from 'node:process';
       },
     ]),
     ControllersModule,
+    MulterModule.register({
+      storage: multer.memoryStorage(),
+    }),
   ],
   controllers: [AppController],
   providers: [

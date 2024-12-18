@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
@@ -25,6 +26,7 @@ import { diskStorage } from 'multer';
 import { UtilsService } from '../shared/utils.service';
 import { BaseController } from '../shared/base.controller';
 import { FileService } from '../services/file.service';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller({
   path: '/api/files',
@@ -45,6 +47,7 @@ export class FilesController extends BaseController {
   }
 
   @Get()
+  @SkipThrottle()
   getAllFilesInfo() {
     try {
       const files = fs.readdirSync(this.folderPath);
@@ -79,11 +82,13 @@ export class FilesController extends BaseController {
     });
   }
 
-  @Delete(':fileName')
+  @Delete()
   @HttpCode(HttpStatus.NO_CONTENT) // No content response for successful deletion
-  async deleteFile(@Param('fileName') fileName: string): Promise<void> {
+  async deleteFile(@Body() fileNames: string[]): Promise<void> {
     try {
-      await this.fileService.deleteFile(fileName);
+      for (const fileName of fileNames) {
+        await this.fileService.deleteFile(fileName);
+      }
       return; // Send no content response
     } catch (_error) {
       throw new Error('Could not delete the file');
@@ -92,7 +97,7 @@ export class FilesController extends BaseController {
 
   @Post()
   @UseInterceptors(
-    FilesInterceptor('files', 10, {
+    FilesInterceptor('files', 20, {
       storage: diskStorage({
         destination: './uploads',
         filename: (_, file, callback) => {

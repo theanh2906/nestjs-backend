@@ -27,16 +27,17 @@ export class FileService extends BaseService {
     return zip.toBuffer();
   }
 
-  deleteFile(fileName: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const fullPath = path.resolve(`${this.FOLDER_PATH}/${fileName}`); // Resolve relative paths
+  async deleteFile(fileName: string) {
+    const fullPath = path.resolve(`${this.FOLDER_PATH}/${fileName}`); // Resolve relative paths
 
-      fs.unlink(fullPath, (err) => {
-        if (err) {
-          return reject(new Error('Failed to delete file: ' + err.message));
-        }
-        resolve();
-      });
-    });
+    try {
+      await fs.promises.unlink(fullPath);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        console.error(`File ${fileName} does not exist.`);
+      } else {
+        console.error(`Error while deleting file: ${error.message}`);
+      }
+    }
   }
 }

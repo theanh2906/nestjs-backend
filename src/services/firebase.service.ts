@@ -8,6 +8,8 @@ import { AppGateway } from '../app.gateway';
 export class FirebaseService extends BaseService {
   protected COLLECTION_NAME = '';
   private database: admin.database.Database;
+  private storage: admin.storage.Storage;
+  private bucket: any;
 
   constructor(
     @Inject('FIREBASE_ADMIN') protected readonly firebaseApp: admin.app.App,
@@ -15,6 +17,9 @@ export class FirebaseService extends BaseService {
   ) {
     super();
     this.database = firebaseApp.database();
+    this.bucket = firebaseApp
+      .storage()
+      .bucket('useful-tools-api.firebasestorage.app');
   }
 
   async fetchData(): Promise<any> {
@@ -31,5 +36,18 @@ export class FirebaseService extends BaseService {
 
   async deleteData(id: string): Promise<any> {
     await this.database.ref(this.COLLECTION_NAME + `/${id}`).remove();
+  }
+
+  async uploadFilesToStorage(file: Express.Multer.File): Promise<string> {
+    const fileName = `${Date.now()}-${file.originalname}`;
+    const fileUpload = this.bucket.file(fileName);
+    await fileUpload.save(file.buffer, {
+      metadata: {
+        contentType: file.mimetype,
+      },
+    });
+
+    await fileUpload.makePublic();
+    return fileUpload.publicUrl();
   }
 }
