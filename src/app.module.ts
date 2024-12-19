@@ -13,6 +13,7 @@ import { AppService } from './app.service';
 import * as process from 'node:process';
 import { MulterModule } from '@nestjs/platform-express';
 import multer from 'multer';
+import { DevtoolsModule } from '@nestjs/devtools-integration';
 
 @Module({
   imports: [
@@ -32,6 +33,9 @@ import multer from 'multer';
     ControllersModule,
     MulterModule.register({
       storage: multer.memoryStorage(),
+    }),
+    DevtoolsModule.register({
+      http: true,
     }),
   ],
   controllers: [AppController],

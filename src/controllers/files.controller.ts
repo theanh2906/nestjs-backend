@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -6,6 +7,7 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  Inject,
   InternalServerErrorException,
   Param,
   Post,
@@ -27,6 +29,9 @@ import { UtilsService } from '../shared/utils.service';
 import { BaseController } from '../shared/base.controller';
 import { FileService } from '../services/file.service';
 import { SkipThrottle } from '@nestjs/throttler';
+import { FirebaseService } from '../services/firebase.service';
+import * as admin from 'firebase-admin';
+import { Bucket } from '@google-cloud/storage';
 
 @Controller({
   path: '/api/files',
@@ -36,14 +41,18 @@ export class FilesController extends BaseController {
     process.cwd(),
     this.configService.get<string>('UPLOAD_FOLDER'),
   );
+  private bucket: Bucket;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly utils: UtilsService,
     private readonly fileService: FileService,
+    private readonly firebaseService: FirebaseService,
+    @Inject('FIREBASE_ADMIN') protected readonly firebaseApp: admin.app.App,
   ) {
     super();
     this.logger.log(process.cwd());
+    this.bucket = firebaseApp.storage().bucket();
   }
 
   @Get()
@@ -67,6 +76,32 @@ export class FilesController extends BaseController {
     } catch (error) {
       console.log(error);
       return [];
+    }
+  }
+
+  @Get('/firebase')
+  @SkipThrottle()
+  async getAllFilesInStorage() {
+    return await this.firebaseService.getAllFiles();
+  }
+
+  @Post('/firebase/folder')
+  async createFolder(@Body('folderName') folderName: string) {
+    try {
+      const result = await this.firebaseService.createFolder(folderName);
+      return { message: result };
+    } catch (error) {
+      return { error: error.message };
+    }
+  }
+
+  @Delete('/firebase')
+  async deleteFiles(@Body() fileNames: string[]) {
+    try {
+      await this.firebaseService.deleteFiles(fileNames);
+      return { message: `Files ${fileNames.join(', ')} deleted successfully.` };
+    } catch (error) {
+      return { error: error.message };
     }
   }
 
@@ -114,6 +149,19 @@ export class FilesController extends BaseController {
       path: file.path,
       size: file.size,
     }));
+  }
+
+  @Post('/firebase')
+  @UseInterceptors(FilesInterceptor('files', 20))
+  async uploadFilesToStorage(@UploadedFiles() files: Express.Multer.File[]) {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('No files uploaded.');
+    }
+    const uploadPromises = files.map(
+      this.firebaseService.uploadFilesToStorage.bind(this),
+    );
+    const fileUrls = await Promise.all(uploadPromises);
+    return { urls: fileUrls };
   }
 
   @Post('/zip')

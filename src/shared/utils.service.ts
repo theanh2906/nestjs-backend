@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { TimeUnitEnum, UnitEnum } from './constants';
+import { GetFilesResponse } from '@google-cloud/storage';
 
 @Injectable()
 export class UtilsService {
@@ -13,6 +14,9 @@ export class UtilsService {
   }
 
   convertCapacity(value: number, fixed = 2) {
+    if (!value) {
+      return '-';
+    }
     const unitMap = [
       { unit: UnitEnum.TB, factor: 1024 ** 4 },
       { unit: UnitEnum.GB, factor: 1024 ** 3 },
@@ -53,5 +57,19 @@ export class UtilsService {
     }
 
     return result.join('');
+  }
+
+  formatStoragePayload(filesResponse: GetFilesResponse) {
+    const files = filesResponse[0];
+    return files
+      .map((file) => ({
+        name: file.name,
+        size: this.convertCapacity(+file.metadata.size),
+        isFile: file.metadata.size !== '0',
+        isDirectory: file.metadata.size == '0',
+        createdAt: file.metadata.timeCreated,
+        modifiedAt: file.metadata.updated,
+      }))
+      .sort((a, b) => +b.isDirectory - +a.isDirectory);
   }
 }
