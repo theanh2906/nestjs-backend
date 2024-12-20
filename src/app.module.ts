@@ -11,7 +11,6 @@ import { AppService } from './app.service';
 import * as process from 'node:process';
 import { MulterModule } from '@nestjs/platform-express';
 import multer from 'multer';
-import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { TerminusModule } from '@nestjs/terminus';
 import { EventsService } from './services/events.service';
 import { UtilsService } from './shared/utils.service';
@@ -55,9 +54,9 @@ const controllers = [AppController, FilesController, HealthController];
     MulterModule.register({
       storage: multer.memoryStorage(),
     }),
-    DevtoolsModule.register({
-      http: true,
-    }),
+    // DevtoolsModule.register({
+    //   http: true,
+    // }),
   ],
   controllers: controllers,
   providers: [
