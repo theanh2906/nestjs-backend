@@ -165,6 +165,7 @@ export class FilesController extends BaseController {
       this.firebaseService.uploadFilesToStorage.bind(this),
     );
     const fileUrls = await Promise.all(uploadPromises);
+    this.gateway.sendMessage('data-update', 'add');
     return { urls: fileUrls };
   }
 
