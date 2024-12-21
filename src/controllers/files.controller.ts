@@ -91,6 +91,7 @@ export class FilesController extends BaseController {
   async createFolder(@Body('folderName') folderName: string) {
     try {
       const result = await this.firebaseService.createFolder(folderName);
+      this.gateway.sendMessage('data-update', 'add');
       return { message: result };
     } catch (error) {
       return { error: error.message };
