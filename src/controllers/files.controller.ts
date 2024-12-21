@@ -32,7 +32,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { FirebaseService } from '../services/firebase.service';
 import * as admin from 'firebase-admin';
 import { Bucket } from '@google-cloud/storage';
-import { AppGateway } from 'src/app.gateway';
+import { AppGateway } from '../app.gateway';
 
 @Controller({
   path: '/api/files',
