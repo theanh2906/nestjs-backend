@@ -32,6 +32,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { FirebaseService } from '../services/firebase.service';
 import * as admin from 'firebase-admin';
 import { Bucket } from '@google-cloud/storage';
+import { AppGateway } from 'src/app.gateway';
 
 @Controller({
   path: '/api/files',
@@ -48,6 +49,7 @@ export class FilesController extends BaseController {
     private readonly utils: UtilsService,
     private readonly fileService: FileService,
     private readonly firebaseService: FirebaseService,
+    private readonly gateway: AppGateway,
     @Inject('FIREBASE_ADMIN') protected readonly firebaseApp: admin.app.App,
   ) {
     super();
@@ -99,6 +101,7 @@ export class FilesController extends BaseController {
   async deleteFiles(@Body() fileNames: string[]) {
     try {
       await this.firebaseService.deleteFiles(fileNames);
+      this.gateway.sendMessage('data-update', 'delete');
       return { message: `Files ${fileNames.join(', ')} deleted successfully.` };
     } catch (error) {
       return { error: error.message };
