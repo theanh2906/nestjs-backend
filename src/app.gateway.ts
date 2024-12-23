@@ -51,6 +51,15 @@ export class AppGateway
     client.emit('response', { success: true, message: 'Message received' });
   }
 
+  @SubscribeMessage('data-update')
+  handleUpdateData(
+    @MessageBody() message: any,
+    @ConnectedSocket() client: Socket,
+  ): void {
+    this.logger.log(`Data update ${client.id}: ${JSON.stringify(message)}`);
+    // client.emit('response', { success: true, message: 'Message received' });
+  }
+
   // @SubscribeMessage('delete-files')
   // handleDeleteFiles(
   //   @MessageBody() message: any,

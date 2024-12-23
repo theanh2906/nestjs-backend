@@ -91,7 +91,6 @@ export class FilesController extends BaseController {
   async createFolder(@Body('folderName') folderName: string) {
     try {
       const result = await this.firebaseService.createFolder(folderName);
-      this.gateway.sendMessage('data-update', 'add');
       return { message: result };
     } catch (error) {
       return { error: error.message };
@@ -102,7 +101,6 @@ export class FilesController extends BaseController {
   async deleteFiles(@Body() fileNames: string[]) {
     try {
       await this.firebaseService.deleteFiles(fileNames);
-      this.gateway.sendMessage('data-update', 'delete');
       return { message: `Files ${fileNames.join(', ')} deleted successfully.` };
     } catch (error) {
       return { error: error.message };
@@ -165,7 +163,6 @@ export class FilesController extends BaseController {
       this.firebaseService.uploadFilesToStorage.bind(this),
     );
     const fileUrls = await Promise.all(uploadPromises);
-    this.gateway.sendMessage('data-update', 'add');
     return { urls: fileUrls };
   }
 

@@ -1,5 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { DataModificationInterceptor } from './interceptors/data-modification.interceptor';
+import { AppGateway } from './app.gateway';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -31,6 +33,9 @@ async function bootstrap() {
    * Start microservice
    */
   // await app.startAllMicroservices();
+  app.useGlobalInterceptors(
+    new DataModificationInterceptor(app.get(AppGateway)),
+  );
   await app.listen(process.env.PORT ?? 3000);
   // const _firebaseApp = initializeApp({
   //   projectId: configService.get('FIREBASE_PROJECT_ID'),
