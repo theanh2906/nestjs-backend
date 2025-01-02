@@ -22,7 +22,7 @@ export class DataModificationInterceptor implements NestInterceptor {
       tap(() => {
         if (
           (method === 'POST' || method === 'PUT' || method === 'DELETE') &&
-          [200, 201].includes(response.statusCode)
+          response.statusCode.toString().startsWith('2')
         ) {
           this.gateway.sendMessage('data-update', 'update');
         }

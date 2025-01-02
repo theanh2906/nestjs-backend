@@ -12,26 +12,30 @@ import * as process from 'node:process';
 import { MulterModule } from '@nestjs/platform-express';
 import multer from 'multer';
 import { TerminusModule } from '@nestjs/terminus';
-import { EventsService } from './services/events.service';
 import { UtilsService } from './shared/utils.service';
 import { FileService } from './services/file.service';
 import { FirebaseService } from './services/firebase.service';
-import { NotesService } from './services/notes.service';
 import { FilesController } from './controllers/files.controller';
 import { HealthController } from './health/health.controller';
 import * as admin from 'firebase-admin';
 import { ServiceAccount } from 'firebase-admin';
 import { SystemService } from './services/system.service';
 import * as fs from 'node:fs';
+import { google } from 'googleapis';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { NotificationsService } from './services/notifications.service';
+
+const MESSAGING_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
+const SCOPES = [MESSAGING_SCOPE];
 
 const services = [
   AppService,
-  EventsService,
   UtilsService,
   FileService,
   FirebaseService,
-  NotesService,
   SystemService,
+  NotificationsService,
 ];
 
 const controllers = [AppController, FilesController, HealthController];
@@ -57,6 +61,27 @@ const controllers = [AppController, FilesController, HealthController];
     // DevtoolsModule.register({
     //   http: true,
     // }),
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.mailgun.org',
+        secure: false,
+        port: 587,
+        auth: {
+          user: 'no-reply@sandboxb495376bc5614fa0950dd0fba33239f2.mailgun.org',
+          pass: 'BenNa1402*',
+        },
+      },
+      defaults: {
+        from: 'no-reply@sandboxb495376bc5614fa0950dd0fba33239f2.mailgun.org',
+      },
+      template: {
+        dir: 'src/templates',
+        adapter: new HandlebarsAdapter(),
+        options: {
+          strict: true,
+        },
+      },
+    }),
   ],
   controllers: controllers,
   providers: [
@@ -75,6 +100,12 @@ const controllers = [AppController, FilesController, HealthController];
             (await getCredential()) as ServiceAccount,
           ),
         });
+      },
+    },
+    {
+      provide: 'FIREBASE_SERVICE_ACCOUNT',
+      useFactory: async () => {
+        return await getCredential();
       },
     },
   ],
@@ -104,6 +135,26 @@ const getCredential = () => {
         console.error('Error decoding the Base64 content:', err);
         reject();
       }
+    });
+  });
+};
+
+const getAccessToken = () => {
+  return new Promise(async (resolve, reject) => {
+    const serviceAccount = (await getCredential()) as any;
+    const jwtClient = new google.auth.JWT(
+      serviceAccount.client_email,
+      null,
+      serviceAccount.private_key,
+      SCOPES,
+      null,
+    );
+    jwtClient.authorize((err, tokens) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(tokens.access_token);
     });
   });
 };

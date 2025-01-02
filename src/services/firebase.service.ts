@@ -2,6 +2,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { BaseService } from '../shared/base.service';
 import * as admin from 'firebase-admin';
@@ -9,23 +10,20 @@ import { v4 as uuid } from 'uuid';
 import { AppGateway } from '../app.gateway';
 import { Bucket } from '@google-cloud/storage';
 import { UtilsService } from '../shared/utils.service';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
-export class FirebaseService extends BaseService {
+export class FirebaseService extends BaseService implements OnModuleInit {
   protected COLLECTION_NAME = '';
+  @Inject('FIREBASE_ADMIN') protected readonly firebaseApp: admin.app.App;
+  @Inject('FIREBASE_SERVICE_ACCOUNT') protected readonly serviceAccount: any;
   private database: admin.database.Database;
   private storage: admin.storage.Storage;
   private bucket: Bucket;
-
-  constructor(
-    @Inject('FIREBASE_ADMIN') protected readonly firebaseApp: admin.app.App,
-    private appGateway: AppGateway,
-    private readonly utilsService: UtilsService,
-  ) {
-    super();
-    this.database = firebaseApp.database();
-    this.bucket = firebaseApp.storage().bucket();
-  }
+  private message: any;
+  @Inject() private readonly utilsService: UtilsService;
+  @Inject() private readonly appGateway: AppGateway;
+  @Inject() private readonly mailerService: MailerService;
 
   async fetchData(): Promise<any> {
     const snapshot = await this.database
@@ -101,5 +99,11 @@ export class FirebaseService extends BaseService {
         'Unable to delete one or more files',
       );
     }
+  }
+
+  onModuleInit(): any {
+    this.database = this.firebaseApp.database();
+    this.bucket = this.firebaseApp.storage().bucket();
+    this.message = this.firebaseApp.messaging();
   }
 }
