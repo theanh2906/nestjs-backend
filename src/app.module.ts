@@ -25,6 +25,7 @@ import { google } from 'googleapis';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { NotificationsService } from './services/notifications.service';
+import { NotificationsController } from './controllers/notifications.controller';
 
 const MESSAGING_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 const SCOPES = [MESSAGING_SCOPE];
@@ -38,7 +39,12 @@ const services = [
   NotificationsService,
 ];
 
-const controllers = [AppController, FilesController, HealthController];
+const controllers = [
+  AppController,
+  FilesController,
+  HealthController,
+  NotificationsController,
+];
 
 @Module({
   imports: [

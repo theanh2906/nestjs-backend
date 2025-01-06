@@ -69,7 +69,7 @@ export class AppGateway
   //   console.log(listFileNames);
   // }
 
-  sendMessage(event: string, data: string) {
+  sendMessage(event: string, data: any) {
     this.server.emit(event, data);
   }
 }

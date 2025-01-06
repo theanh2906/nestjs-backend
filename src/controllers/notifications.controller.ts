@@ -5,10 +5,10 @@ import { NotificationsService } from '../services/notifications.service';
 export class NotificationsController {
   @Inject() notificationsService: NotificationsService;
 
-  @Post('subscribe')
-  async subscribe(@Body() subscription: PushSubscription) {
-    console.log('Subscription received:', subscription);
-    this.notificationsService.subscription = subscription;
+  @Post('/subscribe')
+  async subscribe(@Body() token: any) {
+    console.log('Subscription received:', token);
+    this.notificationsService.token = token.token;
 
     return { message: 'Subscription saved' };
   }
