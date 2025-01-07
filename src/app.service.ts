@@ -19,10 +19,12 @@ export class AppService implements OnModuleInit {
   }
 
   checkForPushSubscription() {
-    this.gateway.sendMessage(
-      'pushSubscription',
-      !!this.notificationsService.token,
-    );
+    setInterval(() => {
+      this.gateway.sendMessage(
+        'pushSubscription',
+        !!this.notificationsService.token,
+      );
+    }, 2000);
   }
 
   onModuleInit(): any {
