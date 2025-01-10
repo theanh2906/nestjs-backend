@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "build:prod": "tsc && shx cp -r serviceAccountKey.b64 dist/",
+    "build:prod": "tsc && shx cp -r secrets dist/secrets",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "cross-env-shell NODE_ENV=prod node dist/src/main.js",
     "dev": "cross-env-shell NODE_ENV=local nest start --watch",

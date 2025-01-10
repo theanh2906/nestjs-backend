@@ -22,10 +22,9 @@ import { ServiceAccount } from 'firebase-admin';
 import { SystemService } from './services/system.service';
 import * as fs from 'node:fs';
 import { google } from 'googleapis';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { NotificationsService } from './services/notifications.service';
 import { NotificationsController } from './controllers/notifications.controller';
+import { SecretsController } from './controllers/secrets.controller';
 
 const MESSAGING_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 const SCOPES = [MESSAGING_SCOPE];
@@ -44,6 +43,7 @@ const controllers = [
   FilesController,
   HealthController,
   NotificationsController,
+  SecretsController,
 ];
 
 @Module({
@@ -67,27 +67,6 @@ const controllers = [
     // DevtoolsModule.register({
     //   http: true,
     // }),
-    MailerModule.forRoot({
-      transport: {
-        host: 'smtp.mailgun.org',
-        secure: false,
-        port: 587,
-        auth: {
-          user: 'no-reply@sandboxb495376bc5614fa0950dd0fba33239f2.mailgun.org',
-          pass: 'BenNa1402*',
-        },
-      },
-      defaults: {
-        from: 'no-reply@sandboxb495376bc5614fa0950dd0fba33239f2.mailgun.org',
-      },
-      template: {
-        dir: 'src/templates',
-        adapter: new HandlebarsAdapter(),
-        options: {
-          strict: true,
-        },
-      },
-    }),
   ],
   controllers: controllers,
   providers: [
@@ -103,7 +82,9 @@ const controllers = [
           databaseURL: process.env.FIREBASE_DATABASE_URL,
           storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
           credential: admin.credential.cert(
-            (await getCredential()) as ServiceAccount,
+            (await getDecodedContent(
+              'serviceAccountKey.b64',
+            )) as ServiceAccount,
           ),
         });
       },
@@ -111,7 +92,13 @@ const controllers = [
     {
       provide: 'FIREBASE_SERVICE_ACCOUNT',
       useFactory: async () => {
-        return await getCredential();
+        return await getDecodedContent('serviceAccountKey.b64');
+      },
+    },
+    {
+      provide: 'APP_SECRETS',
+      useFactory: async () => {
+        return await getAppSecrets();
       },
     },
   ],
@@ -126,10 +113,9 @@ export class AppModule {
   // }
 }
 
-const getCredential = () => {
+const getDecodedContent = (filePath: string) => {
   return new Promise((resolve, reject) => {
-    const filePath = 'serviceAccountKey.b64';
-    fs.readFile(filePath, 'utf8', (err, data) => {
+    fs.readFile(`secrets/${filePath}`, 'utf8', (err, data) => {
       if (err) {
         console.error('Error reading the .b64 file:', err);
         reject();
@@ -145,9 +131,21 @@ const getCredential = () => {
   });
 };
 
-const getAccessToken = () => {
+const getAppSecrets = async () => {
+  const files = fs.readdirSync('secrets');
+  const result: { [key: string]: any } = {};
+  for (const file of files) {
+    const key = file.split('.')[0];
+    Object.assign(result, { [key]: await getDecodedContent(file) });
+  }
+  return result;
+};
+
+const _getAccessToken = () => {
   return new Promise(async (resolve, reject) => {
-    const serviceAccount = (await getCredential()) as any;
+    const serviceAccount = (await getDecodedContent(
+      'serviceAccountKey.b64',
+    )) as any;
     const jwtClient = new google.auth.JWT(
       serviceAccount.client_email,
       null,

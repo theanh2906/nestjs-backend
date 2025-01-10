@@ -29,10 +29,10 @@ export class NotificationsService implements OnModuleInit {
 
   async sendPushNotification(payload: any) {
     try {
-      console.log(this.token);
-      const message = {
+      const message: admin.messaging.Message = {
         token: this.token,
         notification: payload.notification,
+        data: payload,
       };
       const response = await this.messaging.send(message);
       console.log('Successfully sent message:', response);

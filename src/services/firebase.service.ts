@@ -10,7 +10,6 @@ import { v4 as uuid } from 'uuid';
 import { AppGateway } from '../app.gateway';
 import { Bucket } from '@google-cloud/storage';
 import { UtilsService } from '../shared/utils.service';
-import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class FirebaseService extends BaseService implements OnModuleInit {
@@ -23,7 +22,6 @@ export class FirebaseService extends BaseService implements OnModuleInit {
   private message: any;
   @Inject() private readonly utilsService: UtilsService;
   @Inject() private readonly appGateway: AppGateway;
-  @Inject() private readonly mailerService: MailerService;
 
   async fetchData(): Promise<any> {
     const snapshot = await this.database
