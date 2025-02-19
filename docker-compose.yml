@@ -1,0 +1,14 @@
+services:
+  nestjs-backend:
+    image: theanh2906/nestjs-backend
+    container_name: nestjs-backend
+    network_mode: host
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # Add environment variables if necessary
+      NODE_ENV: production
+    restart: always
