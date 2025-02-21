@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { TimeUnitEnum, UnitEnum } from './constants';
 import { GetFilesResponse } from '@google-cloud/storage';
+import * as crypto from 'node:crypto';
 
 @Injectable()
 export class UtilsService {
@@ -13,7 +14,7 @@ export class UtilsService {
     return ((numerator / denominator) * 100).toFixed(fix) + '%';
   }
 
-  convertCapacity(value: number, fixed = 2) {
+  convertCapacity(value: number, fixed = 2): string {
     if (!value) {
       return '-';
     }
@@ -71,5 +72,13 @@ export class UtilsService {
         modifiedAt: file.metadata.updated,
       }))
       .sort((a, b) => +b.isDirectory - +a.isDirectory);
+  }
+
+  generatePCKECode() {
+    return crypto.randomBytes(32).toString('base64url');
+  }
+
+  generatePCKECodeChallenge(verifier: string) {
+    return crypto.createHash('sha256').update(verifier).digest('base64url');
   }
 }

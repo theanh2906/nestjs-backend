@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package backend;
+
+service MonitorService {
+  rpc GetSystemInfo (MonitorRequest) returns (MonitorResponse);
+}
+
+message MonitorRequest {}
+
+message MonitorResponse {
+  string used_memory = 1;
+  string free_memory = 2;
+  string total_memory = 3;
+  string used_memory_percentage = 4;
+  string uptime = 5;
+  RawMemory raw_data = 6;
+}
+
+message RawMemory {
+  int64 used_memory = 1;
+  int64 free_memory = 2;
+  int64 total_memory = 3;
+}
+

@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DataModificationInterceptor } from './interceptors/data-modification.interceptor';
 import { AppGateway } from './app.gateway';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import * as glob from 'glob';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -23,6 +25,17 @@ async function bootstrap() {
   //   },
   // });
   /**
+   * Connect gRPC
+   */
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      package: 'backend',
+      protoPath: getProtoFiles(),
+      url: 'localhost:50051',
+    },
+  });
+  /**
    * Versioning
    */
   // app.enableVersioning({
@@ -32,7 +45,7 @@ async function bootstrap() {
   /**
    * Start microservice
    */
-  // await app.startAllMicroservices();
+  await app.startAllMicroservices();
   app.useGlobalInterceptors(
     new DataModificationInterceptor(app.get(AppGateway)),
   );
@@ -46,3 +59,7 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+const getProtoFiles = () => {
+  return glob.sync('./proto/*.proto');
+};

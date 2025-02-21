@@ -25,6 +25,10 @@ import { google } from 'googleapis';
 import { NotificationsService } from './services/notifications.service';
 import { NotificationsController } from './controllers/notifications.controller';
 import { SecretsController } from './controllers/secrets.controller';
+import { AzureController } from './controllers/azure.controller';
+import { AzureService } from './services/azure.service';
+import { GrpcController } from './controllers/grpc.controller';
+import { GrpcService } from './services/grpc.service';
 
 const MESSAGING_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 const SCOPES = [MESSAGING_SCOPE];
@@ -36,6 +40,8 @@ const services = [
   FirebaseService,
   SystemService,
   NotificationsService,
+  AzureService,
+  GrpcService,
 ];
 
 const controllers = [
@@ -44,6 +50,8 @@ const controllers = [
   HealthController,
   NotificationsController,
   SecretsController,
+  AzureController,
+  GrpcController,
 ];
 
 @Module({
