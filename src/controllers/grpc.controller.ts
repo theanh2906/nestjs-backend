@@ -1,10 +1,7 @@
 import { Controller, Inject } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { GrpcService } from '../services/grpc.service';
-import {
-  SystemMonitoringInfo,
-  SystemService,
-} from '../services/system.service';
+import { SystemService } from '../services/system.service';
 
 @Controller()
 export class GrpcController {
@@ -16,7 +13,9 @@ export class GrpcController {
   }
 
   @GrpcMethod('MonitorService', 'GetSystemInfo')
-  getSystemInfo(): SystemMonitoringInfo {
-    return this.systemService.getMonitoringInfo();
+  getSystemInfo() {
+    return {
+      data: JSON.stringify(this.systemService.getMonitoringInfo()),
+    };
   }
 }
