@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Client } from '@microsoft/microsoft-graph-client';
-import 'isomorphic-fetch';
 import { PublicClientApplication, TokenCache } from '@azure/msal-node';
 import { UtilsService } from '../shared/utils.service';
 
@@ -14,7 +13,7 @@ export class AzureService {
     @Inject('APP_SECRETS') private readonly appSecrets: { [key: string]: any },
     private readonly utils: UtilsService,
   ) {
-    console.log(appSecrets.azureConfig);
+    console.log(this.appSecrets.azureConfig);
     const msalConfig = {
       auth: {
         clientId: this.appSecrets.azureConfig.clientId,

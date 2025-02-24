@@ -10,5 +10,5 @@ services:
       - "3000:3000"
     environment:
       # Add environment variables if necessary
-      NODE_ENV: production
+      NODE_ENV: prod
     restart: always

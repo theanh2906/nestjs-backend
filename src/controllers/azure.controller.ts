@@ -7,7 +7,7 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
-import { AzureService } from 'src/services/azure.service';
+import { AzureService } from '../services/azure.service';
 
 @Controller('/api/azure')
 export class AzureController {

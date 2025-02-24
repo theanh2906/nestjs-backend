@@ -13,22 +13,26 @@ import { MulterModule } from '@nestjs/platform-express';
 import multer from 'multer';
 import { TerminusModule } from '@nestjs/terminus';
 import { UtilsService } from './shared/utils.service';
-import { FileService } from './services/file.service';
-import { FirebaseService } from './services/firebase.service';
-import { FilesController } from './controllers/files.controller';
+import {
+  AzureService,
+  FileService,
+  FirebaseService,
+  GrpcService,
+  NotificationsService,
+  SystemService,
+} from './services';
+import {
+  AzureController,
+  FilesController,
+  GrpcController,
+  NotificationsController,
+  SecretsController,
+} from './controllers';
 import { HealthController } from './health/health.controller';
 import * as admin from 'firebase-admin';
 import { ServiceAccount } from 'firebase-admin';
-import { SystemService } from './services/system.service';
 import * as fs from 'node:fs';
 import { google } from 'googleapis';
-import { NotificationsService } from './services/notifications.service';
-import { NotificationsController } from './controllers/notifications.controller';
-import { SecretsController } from './controllers/secrets.controller';
-import { AzureController } from './controllers/azure.controller';
-import { AzureService } from './services/azure.service';
-import { GrpcController } from './controllers/grpc.controller';
-import { GrpcService } from './services/grpc.service';
 
 const MESSAGING_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 const SCOPES = [MESSAGING_SCOPE];

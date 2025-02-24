@@ -33,5 +33,6 @@ module.exports = {
         ignoreRestSiblings: true,
       },
     ],
+    '@typescript-eslint/no-require-imports': 'off',
   },
 };

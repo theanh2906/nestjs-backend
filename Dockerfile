@@ -14,7 +14,7 @@ RUN npm install && npm install -g typescript
 COPY . .
 
 # Build the NestJS application
-RUN tsc
+RUN npm run build:prod
 
 # Expose the port the app runs on
 EXPOSE 3000
