@@ -1,7 +1,6 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { AppGateway } from './app.gateway';
-import { SystemService } from './services/system.service';
-import { NotificationsService } from './services/notifications.service';
+import { NotificationsService, SystemService } from './services';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -9,11 +8,11 @@ export class AppService implements OnModuleInit {
   @Inject() private readonly systemService: SystemService;
   @Inject() private readonly notificationsService: NotificationsService;
 
-  startMonitoring() {
-    setInterval(() => {
+  async startMonitoring() {
+    setInterval(async () => {
       this.gateway.sendMessage(
         'monitor',
-        JSON.stringify(this.systemService.getMonitoringInfo()),
+        JSON.stringify(await this.systemService.getMonitoringInfo()),
       );
     }, 2000);
   }
@@ -27,8 +26,8 @@ export class AppService implements OnModuleInit {
     }, 2000);
   }
 
-  onModuleInit(): any {
-    this.startMonitoring();
+  async onModuleInit() {
+    await this.startMonitoring();
     this.checkForPushSubscription();
   }
 }

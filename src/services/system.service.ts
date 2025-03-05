@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { UtilsService } from '../shared/utils.service';
 import * as os from 'node:os';
+import { exec } from 'node:child_process';
 
 export interface SystemMonitoringInfo {
   used_memory: string;
@@ -22,6 +23,7 @@ export interface SystemMonitoringInfo {
       cores: number;
     };
     user: string;
+    public_ip: string;
   };
 }
 
@@ -29,7 +31,7 @@ export interface SystemMonitoringInfo {
 export class SystemService {
   @Inject() private readonly utils: UtilsService;
 
-  getMonitoringInfo = (): SystemMonitoringInfo => ({
+  getMonitoringInfo = async () => ({
     used_memory: this.utils.convertCapacity(os.totalmem() - os.freemem()),
     free_memory: this.utils.convertCapacity(os.freemem()),
     total_memory: this.utils.convertCapacity(os.totalmem()),
@@ -52,6 +54,18 @@ export class SystemService {
         cores: os.cpus().length,
       },
       user: os.userInfo().username,
+      public_ip: await this.executeCommand('curl ifconfig.me'),
     },
   });
+
+  executeCommand = (command: string): Promise<string> =>
+    new Promise((resolve, reject) => {
+      exec(command, (error, stdout, _stderr) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(stdout);
+        }
+      });
+    });
 }
