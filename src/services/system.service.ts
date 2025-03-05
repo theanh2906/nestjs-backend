@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { UtilsService } from '../shared/utils.service';
-import * as os from 'os';
+import * as os from 'node:os';
 
 export interface SystemMonitoringInfo {
   used_memory: string;
@@ -13,11 +13,21 @@ export interface SystemMonitoringInfo {
     free_memory: number;
     total_memory: number;
   };
+  system_info: {
+    os: string;
+    model: string;
+    cpu: {
+      model: string;
+      speed: number;
+      cores: number;
+    };
+    user: string;
+  };
 }
 
 @Injectable()
 export class SystemService {
-  constructor(private readonly utils: UtilsService) {}
+  @Inject() private readonly utils: UtilsService;
 
   getMonitoringInfo = (): SystemMonitoringInfo => ({
     used_memory: this.utils.convertCapacity(os.totalmem() - os.freemem()),
@@ -32,6 +42,16 @@ export class SystemService {
       used_memory: os.totalmem() - os.freemem(),
       free_memory: os.freemem(),
       total_memory: os.totalmem(),
+    },
+    system_info: {
+      os: os.version(),
+      model: os.hostname(),
+      cpu: {
+        model: os.cpus()[0].model,
+        speed: os.cpus()[0].speed,
+        cores: os.cpus().length,
+      },
+      user: os.userInfo().username,
     },
   });
 }
