@@ -8,9 +8,9 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { SystemService } from './services/system.service';
+import { QueueService, SystemService } from './services';
 
 @WebSocketGateway({
   cors: {
@@ -24,6 +24,8 @@ export class AppGateway
   @WebSocketServer()
   server: Server;
   private readonly logger = new Logger(AppGateway.name);
+
+  @Inject() private queueService: QueueService;
 
   constructor(private readonly systemService: SystemService) {}
 
@@ -58,6 +60,14 @@ export class AppGateway
   ): void {
     this.logger.log(`Data update ${client.id}: ${JSON.stringify(message)}`);
     // client.emit('response', { success: true, message: 'Message received' });
+  }
+
+  @SubscribeMessage('sendMessage')
+  handleSendMessage(
+    @MessageBody() message: { topic: string; data: any },
+  ): void {
+    const { topic, data } = message;
+    this.queueService.sendMessage(topic, data);
   }
 
   // @SubscribeMessage('delete-files')

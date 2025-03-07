@@ -7,7 +7,6 @@ import {
 import { BaseService } from '../shared/base.service';
 import * as admin from 'firebase-admin';
 import { v4 as uuid } from 'uuid';
-import { AppGateway } from '../app.gateway';
 import { Bucket } from '@google-cloud/storage';
 import { UtilsService } from '../shared/utils.service';
 
@@ -21,13 +20,12 @@ export class FirebaseService extends BaseService implements OnModuleInit {
   private bucket: Bucket;
   private message: any;
   @Inject() private readonly utilsService: UtilsService;
-  @Inject() private readonly appGateway: AppGateway;
 
   async fetchData(): Promise<any> {
     const snapshot = await this.database
       .ref(this.COLLECTION_NAME)
       .once('value');
-    this.appGateway.sendMessage('all-events', snapshot.val());
+    // this.appGateway.sendMessage('all-events', snapshot.val());
     return snapshot.val();
   }
 
