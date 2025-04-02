@@ -18,7 +18,6 @@ import {
   FirebaseService,
   GrpcService,
   NotificationsService,
-  QueueService,
   SystemService,
 } from './services';
 import {
@@ -26,7 +25,6 @@ import {
   FilesController,
   GrpcController,
   NotificationsController,
-  QueueController,
   SecretsController,
 } from './controllers';
 import { HealthController } from './health/health.controller';
@@ -34,7 +32,6 @@ import * as admin from 'firebase-admin';
 import { ServiceAccount } from 'firebase-admin';
 import * as fs from 'node:fs';
 import { google } from 'googleapis';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 
 const MESSAGING_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 const SCOPES = [MESSAGING_SCOPE];
@@ -48,7 +45,6 @@ const services = [
   NotificationsService,
   AzureService,
   GrpcService,
-  QueueService,
 ];
 
 const controllers = [
@@ -59,7 +55,6 @@ const controllers = [
   SecretsController,
   AzureController,
   GrpcController,
-  QueueController,
 ];
 
 @Module({
@@ -83,19 +78,19 @@ const controllers = [
     // DevtoolsModule.register({
     //   http: true,
     // }),
-    ClientsModule.register([
-      {
-        name: 'QUEUE_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: [process.env.RABBITMQ_URL],
-          queue: 'backend',
-          queueOptions: {
-            durable: false,
-          },
-        },
-      },
-    ]),
+    // ClientsModule.register([
+    //   {
+    //     name: 'QUEUE_SERVICE',
+    //     transport: Transport.RMQ,
+    //     options: {
+    //       urls: [process.env.RABBITMQ_URL],
+    //       queue: 'backend',
+    //       queueOptions: {
+    //         durable: false,
+    //       },
+    //     },
+    //   },
+    // ]),
   ],
   controllers: controllers,
   providers: [

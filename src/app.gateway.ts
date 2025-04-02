@@ -8,9 +8,9 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Inject, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { QueueService, SystemService } from './services';
+import { SystemService } from './services';
 
 @WebSocketGateway({
   cors: {
@@ -24,8 +24,6 @@ export class AppGateway
   @WebSocketServer()
   server: Server;
   private readonly logger = new Logger(AppGateway.name);
-
-  @Inject() private queueService: QueueService;
 
   constructor(private readonly systemService: SystemService) {}
 
@@ -59,25 +57,44 @@ export class AppGateway
     @ConnectedSocket() client: Socket,
   ): void {
     this.logger.log(`Data update ${client.id}: ${JSON.stringify(message)}`);
-    // client.emit('response', { success: true, message: 'Message received' });
   }
 
-  @SubscribeMessage('sendMessage')
-  handleSendMessage(
-    @MessageBody() message: { topic: string; data: any },
-  ): void {
-    const { topic, data } = message;
-    this.queueService.sendMessage(topic, data);
+  @SubscribeMessage('command')
+  async executeCommand(@MessageBody() command: any) {
+    return await this.systemService.executeCommand(command);
   }
 
-  // @SubscribeMessage('delete-files')
-  // handleDeleteFiles(
-  //   @MessageBody() message: any,
-  //   @ConnectedSocket() client: Socket,
-  // ): void {
-  //   const listFileNames = JSON.parse(message) as string[];
-  //   console.log(listFileNames);
-  // }
+  @SubscribeMessage('offer')
+  handleOffer(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { offer: any; to: string },
+  ) {
+    this.server
+      .to(payload.to)
+      .emit('offer', { offer: payload.offer, from: client.id });
+  }
+
+  // Handle the answer from the receiver
+  @SubscribeMessage('answer')
+  handleAnswer(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { answer: any; to: string },
+  ) {
+    this.server
+      .to(payload.to)
+      .emit('answer', { answer: payload.answer, from: client.id });
+  }
+
+  // Handle ICE candidates for peer connection
+  @SubscribeMessage('ice-candidate')
+  handleIceCandidate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { candidate: any; to: string },
+  ) {
+    this.server
+      .to(payload.to)
+      .emit('ice-candidate', { candidate: payload.candidate, from: client.id });
+  }
 
   sendMessage(event: string, data: any) {
     this.server.emit(event, data);

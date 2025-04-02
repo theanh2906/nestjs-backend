@@ -35,16 +35,16 @@ async function bootstrap() {
       url: 'localhost:50051',
     },
   });
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.RMQ,
-    options: {
-      urls: [process.env.RABBITMQ_URL],
-      queue: 'backend',
-      queueOptions: {
-        durable: false,
-      },
-    },
-  });
+  // app.connectMicroservice<MicroserviceOptions>({
+  //   transport: Transport.RMQ,
+  //   options: {
+  //     urls: [process.env.RABBITMQ_URL],
+  //     queue: 'backend',
+  //     queueOptions: {
+  //       durable: false,
+  //     },
+  //   },
+  // });
   /**
    * Versioning
    */
