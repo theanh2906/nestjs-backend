@@ -1,4 +1,7 @@
 # Use the official Node.js image as the base image
+FROM ubuntu:latest
+RUN apt-get update && apt-get install -y curl
+
 FROM node:18-alpine
 
 # Set the working directory
