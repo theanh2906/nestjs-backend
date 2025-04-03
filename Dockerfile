@@ -10,7 +10,7 @@ COPY package*.json ./
 # Install the dependencies
 RUN npm install && npm install -g typescript
 
-RUN apt-get update && apt-get install -y curl
+RUN apk add --no-cache curl
 
 # Copy the rest of the application code
 COPY . .
