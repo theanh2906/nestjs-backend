@@ -9,6 +9,7 @@ import {
   HttpStatus,
   Inject,
   InternalServerErrorException,
+  NotFoundException,
   Param,
   Post,
   StreamableFile,
@@ -117,6 +118,35 @@ export class FilesController extends BaseController {
       type: FileTypes[extension],
       disposition: `attachment; filename="${fileName}"`,
     });
+  }
+
+  @Get('/firebase/:fileName')
+  async downloadFileFromStorage(@Param('fileName') fileName: string) {
+    try {
+      const file = this.bucket.file(fileName);
+
+      // Check if file exists
+      const [exists] = await file.exists();
+      if (!exists) {
+        throw new NotFoundException(`File ${fileName} not found`);
+      }
+
+      // Get file metadata to determine content type
+      const [metadata] = await file.getMetadata();
+
+      // Create read stream
+      const fileStream = file.createReadStream();
+
+      return new StreamableFile(fileStream, {
+        type: metadata.contentType || 'application/octet-stream',
+        disposition: `attachment; filename="${fileName}"`,
+      });
+    } catch (error) {
+      if (error.name === 'NotFoundException') {
+        throw error;
+      }
+      throw new InternalServerErrorException('Error downloading file');
+    }
   }
 
   @Delete()
