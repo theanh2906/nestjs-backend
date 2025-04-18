@@ -60,8 +60,19 @@ export class AppGateway
   }
 
   @SubscribeMessage('command')
-  async executeCommand(@MessageBody() command: any) {
-    return await this.systemService.executeCommand(command);
+  async executeCommand(
+    @MessageBody() command: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      this.logger.log(`Executing command from client ${client.id}: ${command}`);
+      const result = await this.systemService.executeCommand(command);
+      this.logger.log(`Command executed successfully`);
+      return { success: true, result };
+    } catch (error) {
+      this.logger.error(`Command execution failed: ${error}`);
+      return { success: false, error: error.toString() };
+    }
   }
 
   @SubscribeMessage('offer')

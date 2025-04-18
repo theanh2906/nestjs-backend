@@ -60,11 +60,13 @@ export class SystemService {
 
   executeCommand = (command: string): Promise<string> =>
     new Promise((resolve, reject) => {
-      exec(command, (error, stdout, _stderr) => {
+      exec(command, (error, stdout, stderr) => {
         if (error) {
-          reject(error);
+          // Include error message and stderr in the rejection
+          reject(`${error.message}`);
         } else {
-          resolve(stdout);
+          // Include both stdout and stderr in the response
+          resolve(`${stdout}${stderr ? '\n' + stderr : ''}`);
         }
       });
     });
