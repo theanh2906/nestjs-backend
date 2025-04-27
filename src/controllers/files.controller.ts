@@ -12,6 +12,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  Query,
   StreamableFile,
   UploadedFiles,
   UseInterceptors,
@@ -28,9 +29,8 @@ import {
 import { diskStorage } from 'multer';
 import { UtilsService } from '../shared/utils.service';
 import { BaseController } from '../shared/base.controller';
-import { FileService } from '../services/file.service';
+import { FileService, FirebaseService } from '../services';
 import { SkipThrottle } from '@nestjs/throttler';
-import { FirebaseService } from '../services/firebase.service';
 import * as admin from 'firebase-admin';
 import { Bucket } from '@google-cloud/storage';
 import { AppGateway } from '../app.gateway';
@@ -120,8 +120,11 @@ export class FilesController extends BaseController {
     });
   }
 
-  @Get('/firebase/:fileName')
-  async downloadFileFromStorage(@Param('fileName') fileName: string) {
+  @Get('/firebase/file/:fileName')
+  async downloadFileFromStorage(
+    @Param('fileName') fileName: string,
+    @Query('preview') preview?: boolean,
+  ) {
     try {
       const file = this.bucket.file(fileName);
 
@@ -131,24 +134,27 @@ export class FilesController extends BaseController {
         throw new NotFoundException(`File ${fileName} not found`);
       }
 
-      // Get file metadata to determine content type
+      // Get file metadata
       const [metadata] = await file.getMetadata();
+      const contentType = metadata.contentType || 'application/octet-stream';
 
       // Create read stream
       const fileStream = file.createReadStream();
 
+      // Return file with disposition based on preview flag
       return new StreamableFile(fileStream, {
-        type: metadata.contentType || 'application/octet-stream',
-        disposition: `attachment; filename="${fileName}"`,
+        type: contentType,
+        disposition: `${preview ? 'inline' : 'attachment'}; filename="${fileName}"`,
       });
     } catch (error) {
       if (error.name === 'NotFoundException') {
         throw error;
       }
-      throw new InternalServerErrorException('Error downloading file');
+      throw new InternalServerErrorException(
+        `Error ${preview ? 'previewing' : 'downloading'} file`,
+      );
     }
   }
-
   @Delete()
   @HttpCode(HttpStatus.NO_CONTENT) // No content response for successful deletion
   async deleteFile(@Body() fileNames: string[]): Promise<void> {
