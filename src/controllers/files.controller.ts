@@ -120,7 +120,7 @@ export class FilesController extends BaseController {
     });
   }
 
-  @Get('/firebase/file/:fileName')
+  @Get('/firebase/:fileName')
   async downloadFileFromStorage(
     @Param('fileName') fileName: string,
     @Query('preview') preview?: boolean,
