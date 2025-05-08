@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DataModificationInterceptor } from './interceptors/data-modification.interceptor';
 import { AppGateway } from './app.gateway';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import * as glob from 'glob';
 
 async function bootstrap() {
@@ -26,14 +27,14 @@ async function bootstrap() {
   /**
    * Connect gRPC
    */
-  // app.connectMicroservice<MicroserviceOptions>({
-  //   transport: Transport.GRPC,
-  //   options: {
-  //     package: 'backend',
-  //     protoPath: getProtoFiles(),
-  //     url: 'localhost:50051',
-  //   },
-  // });
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      package: 'backend',
+      protoPath: getProtoFiles(),
+      url: 'localhost:50051',
+    },
+  });
   // app.connectMicroservice<MicroserviceOptions>({
   //   transport: Transport.RMQ,
   //   options: {

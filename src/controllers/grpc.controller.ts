@@ -12,9 +12,9 @@ export class GrpcController {
   }
 
   @GrpcMethod('MonitorService', 'GetSystemInfo')
-  getSystemInfo() {
+  async getSystemInfo() {
     return {
-      data: JSON.stringify(this.systemService.getMonitoringInfo()),
+      data: JSON.stringify(await this.systemService.getMonitoringInfo()),
     };
   }
 }

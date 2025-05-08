@@ -3,15 +3,11 @@ import { BaseService } from '../shared/base.service';
 import AdmZip from 'adm-zip';
 import { ConfigService } from '@nestjs/config';
 import path from 'path';
-import process from 'node:process';
 import * as fs from 'fs';
 
 @Injectable()
 export class FileService extends BaseService {
-  protected readonly FOLDER_PATH = path.join(
-    process.cwd(),
-    this.configService.get<string>('UPLOAD_FOLDER'),
-  );
+  protected readonly FOLDER_PATH = '/uploads';
 
   constructor(private configService: ConfigService) {
     super();
