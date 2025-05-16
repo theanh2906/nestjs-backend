@@ -18,6 +18,7 @@ import {
   FirebaseService,
   GrpcService,
   NotificationsService,
+  RabbitmqService,
   SystemService,
 } from './services';
 import {
@@ -45,6 +46,7 @@ const services = [
   NotificationsService,
   AzureService,
   GrpcService,
+  RabbitmqService,
 ];
 
 const controllers = [
@@ -106,9 +108,7 @@ const controllers = [
           databaseURL: process.env.FIREBASE_DATABASE_URL,
           storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
           credential: admin.credential.cert(
-            (await getDecodedContent(
-              'serviceAccountKey.b64',
-            )) as ServiceAccount,
+            (await getDecodedContent('serviceAccountKey.b64')) as ServiceAccount
           ),
         });
       },
@@ -168,14 +168,14 @@ const getAppSecrets = async () => {
 const _getAccessToken = () => {
   return new Promise(async (resolve, reject) => {
     const serviceAccount = (await getDecodedContent(
-      'serviceAccountKey.b64',
+      'serviceAccountKey.b64'
     )) as any;
     const jwtClient = new google.auth.JWT(
       serviceAccount.client_email,
       null,
       serviceAccount.private_key,
       SCOPES,
-      null,
+      null
     );
     jwtClient.authorize((err, tokens) => {
       if (err) {

@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DataModificationInterceptor } from './interceptors/data-modification.interceptor';
 import { AppGateway } from './app.gateway';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import * as glob from 'glob';
 
 async function bootstrap() {
@@ -27,14 +26,14 @@ async function bootstrap() {
   /**
    * Connect gRPC
    */
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.GRPC,
-    options: {
-      package: 'backend',
-      protoPath: getProtoFiles(),
-      url: 'localhost:50051',
-    },
-  });
+  // app.connectMicroservice<MicroserviceOptions>({
+  //   transport: Transport.GRPC,
+  //   options: {
+  //     package: 'backend',
+  //     protoPath: getProtoFiles(),
+  //     url: 'localhost:50051',
+  //   },
+  // });
   // app.connectMicroservice<MicroserviceOptions>({
   //   transport: Transport.RMQ,
   //   options: {
@@ -57,7 +56,7 @@ async function bootstrap() {
    */
   await app.startAllMicroservices();
   app.useGlobalInterceptors(
-    new DataModificationInterceptor(app.get(AppGateway)),
+    new DataModificationInterceptor(app.get(AppGateway))
   );
   await app.listen(process.env.PORT ?? 3000);
   // const _firebaseApp = initializeApp({

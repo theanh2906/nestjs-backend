@@ -19,7 +19,7 @@ export class RateLimitMiddleware implements NestMiddleware {
   async use(req: any, _: any, next: (error?: any) => void): Promise<any> {
     const userIp = req.ip;
     let requestCount = await this.cacheManager.get<number>(
-      `${userIp}-ratelimit`,
+      `${userIp}-ratelimit`
     );
     if (requestCount == undefined) {
       this.cacheManager.set(`${userIp}-ratelimit`, 0, this.TIME_WINDOW);

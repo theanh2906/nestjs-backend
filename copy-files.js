@@ -19,6 +19,6 @@ foldersToCopy.forEach((folder) => {
       } else {
         console.log(`Folder ${folder} copied successfully to dist.`);
       }
-    },
+    }
   );
 });

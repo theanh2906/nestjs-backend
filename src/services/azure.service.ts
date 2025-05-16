@@ -11,7 +11,7 @@ export class AzureService {
 
   constructor(
     @Inject('APP_SECRETS') private readonly appSecrets: { [key: string]: any },
-    private readonly utils: UtilsService,
+    private readonly utils: UtilsService
   ) {
     console.log(this.appSecrets.azureConfig);
     const msalConfig = {
@@ -32,7 +32,7 @@ export class AzureService {
 
   async getAuthUrl() {
     const codeChallenge = this.utils.generatePCKECodeChallenge(
-      this.codeVerifier,
+      this.codeVerifier
     );
     return await this.msalClient.getAuthCodeUrl({
       scopes: ['User.Read', 'Calendars.Read', 'Calendars.ReadWrite'],

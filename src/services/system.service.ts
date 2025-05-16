@@ -37,7 +37,7 @@ export class SystemService {
     total_memory: this.utils.convertCapacity(os.totalmem()),
     used_memory_percentage: this.utils.calculatePercentage(
       os.totalmem() - os.freemem(),
-      os.totalmem(),
+      os.totalmem()
     ),
     uptime: this.utils.convertTime(os.uptime()),
     raw_data: {

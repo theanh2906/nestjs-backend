@@ -13,7 +13,7 @@ export class DataModificationInterceptor implements NestInterceptor {
 
   intercept(
     context: ExecutionContext,
-    next: CallHandler,
+    next: CallHandler
   ): Observable<any> | Promise<Observable<any>> {
     const response = context.switchToHttp().getResponse();
     const request = context.switchToHttp().getRequest();
@@ -26,7 +26,7 @@ export class DataModificationInterceptor implements NestInterceptor {
         ) {
           this.gateway.sendMessage('data-update', 'update');
         }
-      }),
+      })
     );
   }
 }

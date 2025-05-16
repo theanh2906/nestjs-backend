@@ -2,6 +2,8 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { AppGateway } from './app.gateway';
 import { NotificationsService, SystemService } from './services';
 
+class RabbitMQService {}
+
 @Injectable()
 export class AppService implements OnModuleInit {
   @Inject() private readonly gateway: AppGateway;
@@ -12,7 +14,7 @@ export class AppService implements OnModuleInit {
     setInterval(async () => {
       this.gateway.sendMessage(
         'monitor',
-        JSON.stringify(await this.systemService.getMonitoringInfo()),
+        JSON.stringify(await this.systemService.getMonitoringInfo())
       );
     }, 2000);
   }
@@ -21,7 +23,7 @@ export class AppService implements OnModuleInit {
     setInterval(() => {
       this.gateway.sendMessage(
         'pushSubscription',
-        !!this.notificationsService.token,
+        !!this.notificationsService.token
       );
     }, 2000);
   }

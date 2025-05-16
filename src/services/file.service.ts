@@ -14,7 +14,7 @@ export class FileService extends BaseService {
   }
 
   async createZip(
-    files: { buffer: Buffer; originalName: string }[],
+    files: { buffer: Buffer; originalName: string }[]
   ): Promise<Buffer> {
     const zip = new AdmZip();
     files.forEach((file) => {

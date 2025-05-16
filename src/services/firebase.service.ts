@@ -79,7 +79,7 @@ export class FirebaseService extends BaseService implements OnModuleInit {
       return `Folder '${folderPath}' created successfully.`;
     } catch (_error) {
       throw new InternalServerErrorException(
-        `Unable to create folder '${folderName}'.`,
+        `Unable to create folder '${folderName}'.`
       );
     }
   }
@@ -87,12 +87,12 @@ export class FirebaseService extends BaseService implements OnModuleInit {
   async deleteFiles(fileNames: string[]) {
     try {
       const deletePromises = fileNames.map((fileName) =>
-        this.bucket.file(fileName).delete(),
+        this.bucket.file(fileName).delete()
       );
       await Promise.all(deletePromises);
     } catch (_error) {
       throw new InternalServerErrorException(
-        'Unable to delete one or more files',
+        'Unable to delete one or more files'
       );
     }
   }

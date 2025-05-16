@@ -41,7 +41,7 @@ import { AppGateway } from '../app.gateway';
 export class FilesController extends BaseController {
   protected readonly folderPath = path.join(
     process.cwd(),
-    this.configService.get<string>('UPLOAD_FOLDER'),
+    this.configService.get<string>('UPLOAD_FOLDER')
   );
   private bucket: Bucket;
 
@@ -51,7 +51,7 @@ export class FilesController extends BaseController {
     private readonly fileService: FileService,
     private readonly firebaseService: FirebaseService,
     private readonly gateway: AppGateway,
-    @Inject('FIREBASE_ADMIN') protected readonly firebaseApp: admin.app.App,
+    @Inject('FIREBASE_ADMIN') protected readonly firebaseApp: admin.app.App
   ) {
     super();
     this.logger.log(process.cwd());
@@ -111,7 +111,7 @@ export class FilesController extends BaseController {
   @Get(':fileName')
   downloadFile(@Param('fileName') fileName: string) {
     const file = fs.createReadStream(
-      `${this.folderPath}/${decodeURI(fileName)}`,
+      `${this.folderPath}/${decodeURI(fileName)}`
     );
     const extension = fileName.split('.').pop();
     return new StreamableFile(file, {
@@ -123,7 +123,7 @@ export class FilesController extends BaseController {
   @Get('/firebase/:fileName')
   async downloadFileFromStorage(
     @Param('fileName') fileName: string,
-    @Query('preview') preview?: boolean,
+    @Query('preview') preview?: boolean
   ) {
     try {
       const file = this.bucket.file(fileName);
@@ -151,7 +151,7 @@ export class FilesController extends BaseController {
         throw error;
       }
       throw new InternalServerErrorException(
-        `Error ${preview ? 'previewing' : 'downloading'} file`,
+        `Error ${preview ? 'previewing' : 'downloading'} file`
       );
     }
   }
@@ -178,7 +178,7 @@ export class FilesController extends BaseController {
           callback(null, fileName);
         },
       }),
-    }),
+    })
   )
   uploadFiles(@UploadedFiles() files: Express.Multer.File[]) {
     return files.map((file) => ({
@@ -196,7 +196,7 @@ export class FilesController extends BaseController {
       throw new BadRequestException('No files uploaded.');
     }
     const uploadPromises = files.map(
-      this.firebaseService.uploadFilesToStorage.bind(this),
+      this.firebaseService.uploadFilesToStorage.bind(this)
     );
     const fileUrls = await Promise.all(uploadPromises);
     return { urls: fileUrls };
@@ -209,10 +209,10 @@ export class FilesController extends BaseController {
         name: 'files',
         maxCount: 10,
       },
-    ]),
+    ])
   )
   async compressAndDownload(
-    @UploadedFiles() files: { files?: Express.Multer.File[] },
+    @UploadedFiles() files: { files?: Express.Multer.File[] }
   ) {
     // if (fs.existsSync(`${this.folderPath}/files.zip`)) {
     //   fs.rmSync(`${this.folderPath}/files.zip`);
@@ -225,7 +225,7 @@ export class FilesController extends BaseController {
       files.files.map((file) => ({
         buffer: file.buffer,
         originalName: file.originalname,
-      })),
+      }))
     );
 
     try {

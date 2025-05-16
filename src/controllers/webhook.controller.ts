@@ -24,7 +24,7 @@ export class WebhookController {
     @Headers('x-hub-signature-256') signature: string,
     @Headers('x-github-event') event: string,
     @Body() payload: any,
-    @Req() request: Request,
+    @Req() request: Request
   ) {
     // Verify webhook signature
     this.verifyGithubSignature(request.body, signature);
@@ -47,7 +47,7 @@ export class WebhookController {
   async handleGitlabWebhook(
     @Headers('x-gitlab-token') token: string,
     @Headers('x-gitlab-event') event: string,
-    @Body() payload: any,
+    @Body() payload: any
   ) {
     // Verify webhook token
     if (token !== this.gitlabSecret) {
@@ -73,7 +73,7 @@ export class WebhookController {
     @Headers('x-hub-signature') signature: string,
     @Headers('x-event-key') event: string,
     @Body() payload: any,
-    @Req() request: Request,
+    @Req() request: Request
   ) {
     // Verify webhook signature
     this.verifyBitbucketSignature(request.body, signature);
@@ -136,7 +136,7 @@ export class WebhookController {
     const repository = payload.repository?.full_name;
     const changes = payload.push?.changes || [];
     this.logger.log(
-      `Bitbucket push event to ${repository} with ${changes.length} changes`,
+      `Bitbucket push event to ${repository} with ${changes.length} changes`
     );
 
     // Implement your logic here

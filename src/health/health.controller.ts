@@ -15,7 +15,7 @@ export class HealthController {
     private readonly health: HealthCheckService,
     private readonly http: HttpHealthIndicator,
     private readonly disk: DiskHealthIndicator,
-    private readonly memory: MemoryHealthIndicator,
+    private readonly memory: MemoryHealthIndicator
   ) {}
 
   @Get()

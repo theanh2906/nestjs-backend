@@ -43,10 +43,10 @@ export class AppGateway
   @SubscribeMessage('message')
   handleMessage(
     @MessageBody() message: any,
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: Socket
   ): void {
     this.logger.log(
-      `Message received from client ${client.id}: ${JSON.stringify(message)}`,
+      `Message received from client ${client.id}: ${JSON.stringify(message)}`
     );
     client.emit('response', { success: true, message: 'Message received' });
   }
@@ -54,7 +54,7 @@ export class AppGateway
   @SubscribeMessage('data-update')
   handleUpdateData(
     @MessageBody() message: any,
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: Socket
   ): void {
     this.logger.log(`Data update ${client.id}: ${JSON.stringify(message)}`);
   }
@@ -62,7 +62,7 @@ export class AppGateway
   @SubscribeMessage('command')
   async executeCommand(
     @MessageBody() command: any,
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: Socket
   ) {
     try {
       this.logger.log(`Executing command from client ${client.id}: ${command}`);
@@ -78,7 +78,7 @@ export class AppGateway
   @SubscribeMessage('offer')
   handleOffer(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { offer: any; to: string },
+    @MessageBody() payload: { offer: any; to: string }
   ) {
     this.server
       .to(payload.to)
@@ -89,7 +89,7 @@ export class AppGateway
   @SubscribeMessage('answer')
   handleAnswer(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { answer: any; to: string },
+    @MessageBody() payload: { answer: any; to: string }
   ) {
     this.server
       .to(payload.to)
@@ -100,7 +100,7 @@ export class AppGateway
   @SubscribeMessage('ice-candidate')
   handleIceCandidate(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { candidate: any; to: string },
+    @MessageBody() payload: { candidate: any; to: string }
   ) {
     this.server
       .to(payload.to)
