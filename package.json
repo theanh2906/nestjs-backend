@@ -21,7 +21,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "heroku-postbuild": "tsc",
     "prettier:fix": "prettier --write .",
-    "test:crawler": "./web-crawler.js --u \"https://tamanhhospital.vn/chuyen-gia/page/{page}?filter_search=&filter_diadiem=36&filter_chuyenkhoa=&filter_chucvu=&filter_ngonngu=&filter_hocham=&filter_hocvi=\" --s 1 --e 63"
+    "test:crawler": "./web-crawler.js --u \"https://tamanhhospital.vn/chuyen-gia/page/{page}?filter_search=&filter_diadiem=36&filter_chuyenkhoa=&filter_chucvu=&filter_ngonngu=&filter_hocham=&filter_hocvi=\" --s 1 --e 1"
   },
   "dependencies": {
     "@azure/msal-node": "^2.16.2",
@@ -72,7 +72,8 @@
     "typescript": "^5.1.3",
     "uuid": "^11.0.3",
     "web-push": "^3.6.7",
-    "ws": "^8.18.2"
+    "ws": "^8.18.2",
+    "playwright": "^1.52.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

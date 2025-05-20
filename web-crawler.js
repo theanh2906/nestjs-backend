@@ -4,37 +4,53 @@
 'use strict';
 
 const minimist = require('minimist');
-const puppeteer = require('puppeteer');
+const { chromium, firefox, webkit } = require('playwright');
 const cheerio = require('cheerio');
-const { Page, Browser } = require('puppeteer');
 const argv = minimist(process.argv.slice(2));
 const baseUrl = argv.url || argv.u || '';
 const start = argv.start || argv.s || 0;
 const end = argv.end || argv.e || 10;
 const outputFile = argv.out || argv.o || 'output.json';
+const browserType = argv.browser || argv.b || 'chromium';
 
 const showHelp = () => {
   console.log(
-    'Usage: node web-crawler.js --url <base_url> --start <start_index> --end <end_index>'
+    'Usage: node web-crawler.js --url <base_url> --start <start_index> --end <end_index> --browser <browser_type>'
   );
   console.log(
-    'Example: node web-crawler.js --url https://example.com --start 0 --end 10'
+    'Example: node web-crawler.js --url https://example.com --start 0 --end 10 --browser chromium'
   );
+  console.log('Available browsers: chromium (default), firefox, webkit');
+};
+
+const getBrowser = async (type) => {
+  switch (type) {
+    case 'firefox':
+      return await firefox.launch();
+    case 'webkit':
+      return await webkit.launch();
+    case 'chromium':
+    default:
+      return await chromium.launch();
+  }
 };
 
 const crawl = async (url, start, end) => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
+  const browser = await getBrowser(browserType);
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const detailPage = await context.newPage();
   const data = [];
 
   for (let i = start; i <= end; i++) {
     await page.goto(url.replace('{page}', i), {
-      waitUntil: 'networkidle2',
-      timeout: 100000, // 60 seconds timeout
+      waitUntil: 'networkidle',
+      timeout: 100000, // 100 seconds timeout
     });
-    const $ = cheerio.load(await page.content());
+    const content = await page.content();
+    const $ = cheerio.load(content);
     // Doctor name
-    $('.info_chuyengia').each((index, element) => {
+    $('.info_chuyengia').each(async (index, element) => {
       const name = $(element).find('h2').text();
       const position = $(element)
         .find('.font_helI')
@@ -47,15 +63,17 @@ const crawl = async (url, start, end) => {
       data.push({
         name,
         position,
+        page: i,
       });
     });
     // Doctor image
-    $('.thumb_cgia').each((index, element) => {
+    $('.thumb_cgia').each(async (index, element) => {
+      const detailUrl = $(element).attr('href');
       const imgSrc = $(element).find('img').attr('src');
       const mappingName = $(element).find('img').attr('alt');
       data.filter((item) => item.name === mappingName)[0].img_src = imgSrc;
+      await crawlEachPage(detailPage, context, detailUrl);
     });
-    await crawlEachPage(page, browser);
   }
 
   console.log(data);
@@ -64,14 +82,55 @@ const crawl = async (url, start, end) => {
   return data;
 };
 
-const crawlEachPage = async (_page, _browser) => {
-  //TODO: Implement the logic to crawl each page
+const crawlEachPage = async (page, context, detailUrl) => {
+  if (detailUrl) {
+    await page.goto(detailUrl, {
+      waitUntil: 'networkidle',
+      timeout: 100000, // 100 seconds timeout
+    });
+    const content = await page.content();
+    const $ = cheerio.load(content);
+    console.log($('#collapsekinhnghiemct'));
+    $('#collapsekinhnghiemct').each((index, element) => {
+      const experience = $(element)
+        .find('ul')
+        .contents()
+        .map(() => this.text());
+      console.log($(element).find('ul').contents());
+    });
+    return doctorDetails;
+  }
 };
 
 const main = async () => {
-  const doctorData = await crawl(baseUrl, start, end);
-  writeToFile(doctorData);
-  process.exit(0);
+  if (argv.help || argv.h) {
+    showHelp();
+    process.exit(0);
+  }
+
+  if (!baseUrl) {
+    console.error('Error: URL is required');
+    showHelp();
+    process.exit(1);
+  }
+
+  try {
+    // Start timing the crawling process
+    const startTime = new Date();
+
+    const doctorData = await crawl(baseUrl, start, end);
+    writeToFile(doctorData);
+
+    // Calculate and display total crawling time
+    const endTime = new Date();
+    const totalTime = (endTime - startTime) / 1000; // Convert to seconds
+    console.log(`Total crawling time: ${totalTime.toFixed(2)} seconds`);
+
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during crawling:', error);
+    process.exit(1);
+  }
 };
 
 const writeToFile = (data) => {

@@ -12,3 +12,15 @@ services:
       # Add environment variables if necessary
       NODE_ENV: prod
     restart: always
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    network_mode: host
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+      - '15674:15674'
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    restart: always

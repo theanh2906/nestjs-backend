@@ -1,5 +1,6 @@
 # Use the official Node.js image as the base image
 FROM node:18-alpine
+FROM mcr.microsoft.com/playwright:v1.52.0-noble
 
 # Set the working directory
 WORKDIR /app
@@ -8,7 +9,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install the dependencies
-RUN npm install && npm install -g typescript
+RUN npm install && npm install -g typescript npx
 
 RUN apk add --no-cache curl
 
