@@ -25,16 +25,35 @@ const showHelp = () => {
 const crawl = async (url, start, end) => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
-  // await page.goto(url);
-  // const content = await page.content();
-  // // const $ = cheerio.load(content);
   const data = [];
 
   for (let i = start; i <= end; i++) {
-    await page.goto(url.replace('{page}', i));
+    await page.goto(url.replace('{page}', i), {
+      waitUntil: 'networkidle2',
+      timeout: 100000, // 60 seconds timeout
+    });
     const $ = cheerio.load(await page.content());
-    $('.info_chuyengia').each((element) => {
-      console.log(element.find('h2').text());
+    // Doctor name
+    $('.info_chuyengia').each((index, element) => {
+      const name = $(element).find('h2').text();
+      const position = $(element)
+        .find('.font_helI')
+        .contents()
+        .filter(function () {
+          return this.nodeType === 3;
+        })
+        .text()
+        .trim();
+      data.push({
+        name,
+        position,
+      });
+    });
+    // Doctor image
+    $('.thumb_cgia').each((index, element) => {
+      const imgSrc = $(element).find('img').attr('src');
+      const mappingName = $(element).find('img').attr('alt');
+      data.filter((item) => item.name === mappingName)[0].img_src = imgSrc;
     });
     await crawlEachPage(page, browser);
   }
@@ -50,7 +69,14 @@ const crawlEachPage = async (_page, _browser) => {
 };
 
 const main = async () => {
-  await crawl(baseUrl, start, end);
+  const doctorData = await crawl(baseUrl, start, end);
+  writeToFile(doctorData);
+  process.exit(0);
+};
+
+const writeToFile = (data) => {
+  const fs = require('fs');
+  fs.writeFileSync(outputFile, JSON.stringify(data, null, 2), 'utf-8');
 };
 
 main();
