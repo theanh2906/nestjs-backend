@@ -130,7 +130,7 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
   subscribeStomp(
     destination: string,
     callback: (msg: IMessage) => void,
-    headers: any = {}
+    headers: any = { ack: 'client' }
   ): StompSubscription {
     if (!this.stompClient || !this.stompClient.connected) {
       throw new Error('STOMP client not connected');
@@ -162,9 +162,12 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
     this.stompClient = new Client({
       brokerURL: stompUrl,
       connectHeaders: {
-        login: this.configService.get<string>('RABBITMQ_STOMP_LOGIN', 'admin'),
+        login: this.configService.get<string>(
+          'RABBITMQ_STOMP_USERNAME',
+          'admin'
+        ),
         passcode: this.configService.get<string>(
-          'RABBITMQ_STOMP_PASSCODE',
+          'RABBITMQ_STOMP_PASSWORD',
           'admin'
         ),
       },
@@ -177,8 +180,9 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
     this.stompClient.onConnect = () => {
       this.logger.log('STOMP connected');
       // Example subscription; customize as needed
-      this.subscribeStomp('/queue/benna', (msg) => {
+      this.subscribeStomp('/queue/request', (msg) => {
         this.logger.log(`Received STOMP message: ${msg.body}`);
+        msg.ack();
       });
     };
 

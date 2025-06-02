@@ -10,7 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { SystemService } from './services';
+import { FileService, SystemService } from './services';
 
 @WebSocketGateway({
   cors: {
@@ -25,7 +25,10 @@ export class AppGateway
   server: Server;
   private readonly logger = new Logger(AppGateway.name);
 
-  constructor(private readonly systemService: SystemService) {}
+  constructor(
+    private readonly systemService: SystemService,
+    private readonly fileService: FileService
+  ) {}
 
   afterInit(): void {
     this.logger.log('WebSocket Gateway Initialized');
@@ -40,16 +43,16 @@ export class AppGateway
     this.logger.log(`Client disconnected: ${client.handshake.query.userId}`);
   }
 
-  @SubscribeMessage('message')
-  handleMessage(
-    @MessageBody() message: any,
-    @ConnectedSocket() client: Socket
-  ): void {
-    this.logger.log(
-      `Message received from client ${client.id}: ${JSON.stringify(message)}`
-    );
-    client.emit('response', { success: true, message: 'Message received' });
-  }
+  // @SubscribeMessage('message')
+  // handleMessage(
+  //   @MessageBody() message: any,
+  //   @ConnectedSocket() client: Socket
+  // ): void {
+  //   this.logger.log(
+  //     `Message received from client ${client.id}: ${JSON.stringify(message)}`
+  //   );
+  //   client.emit('response', { success: true, message: 'Message received' });
+  // }
 
   @SubscribeMessage('data-update')
   handleUpdateData(
@@ -105,6 +108,41 @@ export class AppGateway
     this.server
       .to(payload.to)
       .emit('ice-candidate', { candidate: payload.candidate, from: client.id });
+  }
+
+  @SubscribeMessage('file-sync')
+  async handleFileSync(@ConnectedSocket() client: Socket) {
+    try {
+      this.logger.log(`File sync request from client ${client.id}`);
+
+      await this.fileService.createZipFromFolder('C:\\Notes');
+
+      // Stream file in chunks
+      try {
+        for await (const chunk of this.fileService.streamFileInChunks()) {
+          // Send each chunk to the client
+          client.emit('file-sync-chunk', {
+            ...chunk,
+            chunk: chunk.chunk.toString('base64'), // Convert buffer to base64 for transmission
+          });
+
+          // Add a small delay to prevent overwhelming the client
+          await new Promise((resolve) => setTimeout(resolve, 5));
+        }
+
+        // Signal end of file transfer
+        client.emit('file-sync-complete', { success: true });
+        this.logger.log(`File sync completed`);
+      } catch (streamError) {
+        this.logger.error(`Error streaming file: ${streamError.message}`);
+        client.emit('file-sync-error', {
+          message: `Error streaming file: ${streamError.message}`,
+        });
+      }
+    } catch (error) {
+      this.logger.error(`File sync error: ${error.message}`);
+      client.emit('file-sync-error', { message: error.message });
+    }
   }
 
   sendMessage(event: string, data: any) {

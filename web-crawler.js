@@ -11,7 +11,7 @@ const baseUrl = argv.url || argv.u || '';
 const start = argv.start || argv.s || 0;
 const end = argv.end || argv.e || 10;
 const outputFile = argv.out || argv.o || 'output.json';
-const browserType = argv.browser || argv.b || 'chromium';
+const browserType = argv.browser || argv.b || 'edge';
 
 const showHelp = () => {
   console.log(
@@ -26,12 +26,18 @@ const showHelp = () => {
 const getBrowser = async (type) => {
   switch (type) {
     case 'firefox':
-      return await firefox.launch();
+      return await firefox.launch({
+        headless: false, // Set to false to see the browser window
+      });
     case 'webkit':
-      return await webkit.launch();
+      return await webkit.launch({
+        headless: false, // Set to false to see the browser window
+      });
     case 'chromium':
     default:
-      return await chromium.launch();
+      return await chromium.launch({
+        headless: false, // Set to false to see the browser window
+      });
   }
 };
 
@@ -67,13 +73,16 @@ const crawl = async (url, start, end) => {
       });
     });
     // Doctor image
-    $('.thumb_cgia').each(async (index, element) => {
-      const detailUrl = $(element).attr('href');
-      const imgSrc = $(element).find('img').attr('src');
-      const mappingName = $(element).find('img').attr('alt');
-      data.filter((item) => item.name === mappingName)[0].img_src = imgSrc;
-      await crawlEachPage(detailPage, context, detailUrl);
-    });
+    setTimeout(() => {
+      $('.thumb_cgia').each(async (index, element) => {
+        console.log(index);
+        const detailUrl = $(element).attr('href');
+        const imgSrc = $(element).find('img').attr('src');
+        const mappingName = $(element).find('img').attr('alt');
+        data.filter((item) => item.name === mappingName)[0].img_src = imgSrc;
+        await crawlEachPage(detailPage, context, detailUrl);
+      });
+    }, 100);
   }
 
   console.log(data);
@@ -89,16 +98,16 @@ const crawlEachPage = async (page, context, detailUrl) => {
       timeout: 100000, // 100 seconds timeout
     });
     const content = await page.content();
+    console.log(content);
     const $ = cheerio.load(content);
     console.log($('#collapsekinhnghiemct'));
-    $('#collapsekinhnghiemct').each((index, element) => {
+    $('#collapsekinhnghiemct').each(async (index, element) => {
       const experience = $(element)
         .find('ul')
         .contents()
-        .map(() => this.text());
+        .map((each) => each.text());
       console.log($(element).find('ul').contents());
     });
-    return doctorDetails;
   }
 };
 
@@ -120,6 +129,7 @@ const main = async () => {
 
     const doctorData = await crawl(baseUrl, start, end);
     writeToFile(doctorData);
+    await context.close();
 
     // Calculate and display total crawling time
     const endTime = new Date();

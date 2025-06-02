@@ -1,34 +1,16 @@
 import { Module } from '@nestjs/common';
 import { AppGateway } from './app.gateway';
 import { HttpModule } from '@nestjs/axios';
-import { AppController } from './app.controller';
 import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { RateLimitGuards } from './guards/rate-limit.guards';
 import { ConfigModule } from '@nestjs/config';
-import { AppService } from './app.service';
 import { MulterModule } from '@nestjs/platform-express';
 import multer from 'multer';
 import { TerminusModule } from '@nestjs/terminus';
-import { UtilsService } from './shared/utils.service';
-import {
-  AzureService,
-  FileService,
-  FirebaseService,
-  GrpcService,
-  NotificationsService,
-  RabbitmqService,
-  SystemService,
-} from './services';
-import {
-  AzureController,
-  FilesController,
-  GrpcController,
-  NotificationsController,
-  SecretsController,
-} from './controllers';
-import { HealthController } from './health/health.controller';
+import * as services from './services';
+import * as controllers from './controllers';
 import * as admin from 'firebase-admin';
 import { ServiceAccount } from 'firebase-admin';
 import * as fs from 'node:fs';
@@ -36,28 +18,6 @@ import { google } from 'googleapis';
 
 const MESSAGING_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 const SCOPES = [MESSAGING_SCOPE];
-
-const services = [
-  AppService,
-  UtilsService,
-  FileService,
-  FirebaseService,
-  SystemService,
-  NotificationsService,
-  AzureService,
-  GrpcService,
-  RabbitmqService,
-];
-
-const controllers = [
-  AppController,
-  FilesController,
-  HealthController,
-  NotificationsController,
-  SecretsController,
-  AzureController,
-  GrpcController,
-];
 
 @Module({
   imports: [
@@ -94,10 +54,10 @@ const controllers = [
     //   },
     // ]),
   ],
-  controllers: controllers,
+  controllers: Object.values(controllers),
   providers: [
     AppGateway,
-    ...services,
+    ...Object.values(services),
     { provide: APP_INTERCEPTOR, useClass: CacheInterceptor },
     { provide: APP_GUARD, useClass: RateLimitGuards },
     {
