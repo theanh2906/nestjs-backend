@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install the dependencies
-RUN npm install && npm install -g typescript && npm install -g node-pre-gyp
+RUN npm install -g node-pre-gyp && npm install && npm install -g typescript
 
 RUN apk add --no-cache curl
 
