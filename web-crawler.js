@@ -7,8 +7,9 @@ const minimist = require('minimist');
 const { chromium, firefox, webkit } = require('playwright');
 const cheerio = require('cheerio');
 const argv = minimist(process.argv.slice(2));
-const baseUrl = argv.url || argv.u || '';
-const start = argv.start || argv.s || 0;
+const baseUrl =
+  argv.url || argv.u || 'https://tamanhhospital.vn/chuyen-gia/page/{page}';
+const start = argv.start || argv.s || 1;
 const end = argv.end || argv.e || 10;
 const outputFile = argv.out || argv.o || 'output.json';
 const browserType = argv.browser || argv.b || 'edge';
