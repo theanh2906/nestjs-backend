@@ -15,6 +15,7 @@ import * as admin from 'firebase-admin';
 import { ServiceAccount } from 'firebase-admin';
 import * as fs from 'node:fs';
 import { google } from 'googleapis';
+import * as process from 'node:process';
 
 const MESSAGING_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 const SCOPES = [MESSAGING_SCOPE];
@@ -46,9 +47,13 @@ const SCOPES = [MESSAGING_SCOPE];
     //     transport: Transport.RMQ,
     //     options: {
     //       urls: [process.env.RABBITMQ_URL],
-    //       queue: 'backend',
+    //       queue: 'nestjs-backend',
     //       queueOptions: {
     //         durable: false,
+    //       },
+    //       credentials: {
+    //         username: process.env.RABBITMQ_USERNAME,
+    //         password: process.env.RABBITMQ_PASSWORD,
     //       },
     //     },
     //   },

@@ -6,6 +6,7 @@ import { GrpcService, SystemService } from '../services';
 export class GrpcController {
   @Inject() grpcService: GrpcService;
   @Inject() systemService: SystemService;
+
   @GrpcMethod('GreeterService', 'SayHello')
   sayHello(data: { name: string }): { message: string } {
     return this.grpcService.sayHello(data.name);

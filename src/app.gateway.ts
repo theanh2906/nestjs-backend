@@ -10,7 +10,9 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { FileService, SystemService } from './services';
+import { FileService, FirebaseService, SystemService } from './services';
+import * as fs from 'node:fs';
+import * as path from 'path';
 
 @WebSocketGateway({
   cors: {
@@ -27,7 +29,8 @@ export class AppGateway
 
   constructor(
     private readonly systemService: SystemService,
-    private readonly fileService: FileService
+    private readonly fileService: FileService,
+    private readonly firebaseService: FirebaseService
   ) {}
 
   afterInit(): void {
@@ -115,33 +118,45 @@ export class AppGateway
     try {
       this.logger.log(`File sync request from client ${client.id}`);
 
-      await this.fileService.createZipFromFolder('C:\\Notes');
+      // Create a zip file from the folder
+      const zipFilePath =
+        await this.fileService.createZipFromFolder('C:\\Notes');
+      this.logger.log(`Zip file created at: ${zipFilePath}`);
 
-      // Stream file in chunks
-      try {
-        for await (const chunk of this.fileService.streamFileInChunks()) {
-          // Send each chunk to the client
-          client.emit('file-sync-chunk', {
-            ...chunk,
-            chunk: chunk.chunk.toString('base64'), // Convert buffer to base64 for transmission
-          });
-
-          // Add a small delay to prevent overwhelming the client
-          await new Promise((resolve) => setTimeout(resolve, 5));
-        }
-
-        // Signal end of file transfer
-        client.emit('file-sync-complete', { success: true });
-        this.logger.log(`File sync completed`);
-      } catch (streamError) {
-        this.logger.error(`Error streaming file: ${streamError.message}`);
-        client.emit('file-sync-error', {
-          message: `Error streaming file: ${streamError.message}`,
-        });
+      // Read the zip file from disk
+      const fileInfo = await this.fileService.getFileInfo(zipFilePath);
+      if (!fileInfo) {
+        throw new Error('Failed to get zip file info');
       }
+
+      // Read the file content
+      const fileBuffer = await fs.promises.readFile(zipFilePath);
+
+      // Create an Express.Multer.File object
+      const multerFile: Express.Multer.File = {
+        fieldname: 'file',
+        originalname: path.basename(zipFilePath),
+        encoding: '7bit',
+        mimetype: 'application/zip',
+        buffer: fileBuffer,
+        size: fileInfo.size,
+        destination: '',
+        filename: path.basename(zipFilePath),
+        path: zipFilePath,
+        stream: null,
+      };
+
+      // Upload the file to Firebase Storage
+      const fileUrl =
+        await this.firebaseService.uploadFilesToStorage(multerFile);
+      this.sendMessage('data-update', 'updated');
+      this.logger.log(`File uploaded to Firebase Storage: ${fileUrl}`);
+
+      // Clean up the local zip file
+      await fs.promises.unlink(zipFilePath);
+      this.logger.log(`Local zip file deleted: ${zipFilePath}`);
     } catch (error) {
       this.logger.error(`File sync error: ${error.message}`);
-      client.emit('file-sync-error', { message: error.message });
     }
   }
 

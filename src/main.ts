@@ -31,17 +31,19 @@ async function bootstrap() {
   //   options: {
   //     package: 'backend',
   //     protoPath: getProtoFiles(),
-  //     url: 'localhost:50051',
+  //     url: 'localhost:9090',
   //   },
   // });
   // app.connectMicroservice<MicroserviceOptions>({
   //   transport: Transport.RMQ,
   //   options: {
   //     urls: [process.env.RABBITMQ_URL],
-  //     queue: 'backend',
+  //     queue: 'nestjs-backend',
   //     queueOptions: {
   //       durable: false,
   //     },
+  //     noAck: false,
+  //     prefetchCount: 1,
   //   },
   // });
   /**
@@ -69,6 +71,6 @@ async function bootstrap() {
 
 bootstrap();
 
-const getProtoFiles = () => {
+const _getProtoFiles = () => {
   return glob.sync('./proto/*.proto');
 };

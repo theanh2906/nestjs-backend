@@ -17,11 +17,11 @@ import { ConfigService } from '@nestjs/config';
  * Supports queue publishing/consuming and STOMP over WebSocket messaging.
  */
 @Injectable()
-export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
+export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
   private connection: amqp.ChannelModel;
   private channel: amqp.Channel;
   private stompClient: Client;
-  private readonly logger = new Logger(RabbitmqService.name);
+  private readonly logger = new Logger(RabbitMQService.name);
   private stompSubscriptions: Map<string, StompSubscription> = new Map();
 
   @Inject()
@@ -32,7 +32,7 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
    */
   async onModuleInit() {
     // Optionally connect to AMQP if needed:
-    // await this.connect();
+    // await this.connect('amqp://localhost:5672');
     this.initStomp();
   }
 
@@ -41,67 +41,7 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
    */
   async onModuleDestroy() {
     if (this.stompClient) await this.stompClient.deactivate();
-    this.unsubscribeStomp('/queue/benna');
-    await this.disconnect();
-  }
-
-  /**
-   * Connects to RabbitMQ using AMQP protocol.
-   * @param url RabbitMQ AMQP URL (default: amqp://localhost)
-   */
-  async connect(url: string = 'amqp://localhost') {
-    this.connection = await amqp.connect(url);
-    this.channel = await this.connection.createChannel();
-    this.logger.log('Connected to RabbitMQ (AMQP)');
-  }
-
-  /**
-   * Disconnects from RabbitMQ (AMQP).
-   */
-  async disconnect() {
-    if (this.channel) {
-      await this.channel.close();
-      this.channel = undefined;
-    }
-    if (this.connection) {
-      await this.connection.close();
-      this.connection = undefined;
-    }
-    this.logger.log('Disconnected from RabbitMQ (AMQP)');
-  }
-
-  /**
-   * Publishes a message to a RabbitMQ queue (AMQP).
-   * @param queue Queue name
-   * @param content Message content (string or Buffer)
-   */
-  async publishToQueue(queue: string, content: string | Buffer) {
-    if (!this.channel) {
-      throw new Error('AMQP channel is not initialized');
-    }
-    await this.channel.assertQueue(queue, { durable: true });
-    const buffer = typeof content === 'string' ? Buffer.from(content) : content;
-    this.channel.sendToQueue(queue, buffer);
-    this.logger.log(`Published to queue "${queue}"`);
-  }
-
-  /**
-   * Consumes messages from a RabbitMQ queue (AMQP).
-   * @param queue Queue name
-   * @param onMessage Callback for received messages
-   */
-  async consume(queue: string, onMessage: (msg: amqp.ConsumeMessage) => void) {
-    if (!this.channel) {
-      throw new Error('AMQP channel is not initialized');
-    }
-    await this.channel.assertQueue(queue, { durable: true });
-    await this.channel.consume(queue, (msg) => {
-      if (msg) {
-        onMessage(msg);
-        this.channel.ack(msg);
-      }
-    });
-    this.logger.log(`Consuming from queue "${queue}"`);
+    this.unsubscribeStomp('/queue/nestjs-backend');
   }
 
   // --- STOMP (WebSocket) ---
@@ -154,6 +94,53 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  subscribeToStream(stream: string) {
+    this.stompClient.subscribe(
+      `/queue/${stream}`,
+      (message) => {
+        const content = message.body;
+        const offset = message.headers['x-stream-offset'] || 'N/A';
+        this.logger.log(`Received message: ${content} (offset: ${offset})`);
+        message.ack(); // Manual acknowledgment
+      },
+      {
+        ack: 'client-individual', // Manual acknowledgment
+        'prefetch-count': '100', // Limit messages per fetch
+        'x-queue-type': 'stream', // Declare as stream
+        'x-stream-offset': 'first', // Start from new messages
+      }
+    );
+    this.logger.log(`Subscribed to stream: nestjs-backend-stream`);
+  }
+
+  sendToStream(stream: string, message: any) {
+    if (!this.stompClient || !this.stompClient.connected) {
+      throw new Error('STOMP client not connected');
+    }
+    this.stompClient.publish({
+      destination: `/queue/${stream}`,
+      body: JSON.stringify(message),
+      headers: {
+        'x-stream-offset': 'first', // Start from new messages
+      },
+    });
+    this.logger.log(`Sent message to stream: ${message}`);
+  }
+
+  sendToExchange(exchange: string, message: any) {
+    if (!this.stompClient || !this.stompClient.connected) {
+      throw new Error('STOMP client not connected');
+    }
+    this.stompClient.publish({
+      destination: `/exchange/${exchange}`,
+      body: JSON.stringify(message),
+      headers: {
+        'content-type': 'application/json',
+      },
+    });
+    this.logger.log(`Sent message to exchange: nestjs-backend`);
+  }
+
   /**
    * Initializes the STOMP client using configuration.
    */
@@ -162,14 +149,8 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
     this.stompClient = new Client({
       brokerURL: stompUrl,
       connectHeaders: {
-        login: this.configService.get<string>(
-          'RABBITMQ_STOMP_USERNAME',
-          'admin'
-        ),
-        passcode: this.configService.get<string>(
-          'RABBITMQ_STOMP_PASSWORD',
-          'admin'
-        ),
+        login: this.configService.get<string>('RABBITMQ_USERNAME'),
+        passcode: this.configService.get<string>('RABBITMQ_PASSWORD'),
       },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
@@ -180,10 +161,15 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
     this.stompClient.onConnect = () => {
       this.logger.log('STOMP connected');
       // Example subscription; customize as needed
-      this.subscribeStomp('/queue/request', (msg) => {
+      this.subscribeStomp('/queue/nestjs-backend', (msg) => {
         this.logger.log(`Received STOMP message: ${msg.body}`);
         msg.ack();
       });
+      this.subscribeToStream(this.configService.get<string>('RABBITMQ_STREAM'));
+      this.sendToStream(
+        this.configService.get<string>('RABBITMQ_STREAM'),
+        JSON.stringify({ hello: 'world' })
+      );
     };
 
     this.stompClient.onStompError = (frame) => {

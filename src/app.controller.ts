@@ -3,7 +3,7 @@ import { AppService } from './app.service';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   NotificationsService,
-  RabbitmqService,
+  RabbitMQService,
   SystemService,
 } from './services';
 import { SkipThrottle } from '@nestjs/throttler';
@@ -16,7 +16,7 @@ export class AppController extends BaseController {
   @Inject(CACHE_MANAGER) private cacheManager: Cache;
   @Inject() private readonly systemService: SystemService;
   @Inject() private readonly notificationsService: NotificationsService;
-  @Inject() private readonly rabbitMQService: RabbitmqService;
+  @Inject() private readonly rabbitMQService: RabbitMQService;
 
   @Get()
   @SkipThrottle()
