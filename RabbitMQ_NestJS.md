@@ -81,7 +81,9 @@ this.rabbitmqService.protocol = 'AMQP'; // This is the default
 #### Send Message to Stream Queue
 
 ```typescript
-await this.rabbitmqService.sendToStream('my-stream-queue', { message: 'Hello, RabbitMQ Stream!' });
+await this.rabbitmqService.sendToStream('my-stream-queue', {
+  message: 'Hello, RabbitMQ Stream!',
+});
 ```
 
 #### Subscribe to Stream Queue
@@ -93,7 +95,9 @@ this.rabbitmqService.subscribeToStream('my-stream-queue', true); // true to star
 #### Send Message to Exchange
 
 ```typescript
-this.rabbitmqService.sendToExchange('my-exchange', { message: 'Hello, RabbitMQ Exchange!' });
+this.rabbitmqService.sendToExchange('my-exchange', {
+  message: 'Hello, RabbitMQ Exchange!',
+});
 ```
 
 ---
@@ -149,8 +153,11 @@ export class ExampleService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     // Using AMQP for backend processing
     this.rabbitmqService.protocol = 'AMQP';
-    await this.rabbitmqService.sendToStream('jobs', { id: 123, action: 'process' });
-    
+    await this.rabbitmqService.sendToStream('jobs', {
+      id: 123,
+      action: 'process',
+    });
+
     // Using STOMP for real-time updates
     this.rabbitmqService.protocol = 'STOMP';
     this.rabbitmqService.subscribeStomp('/queue/updates', (msg) => {
