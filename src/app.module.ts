@@ -16,6 +16,7 @@ import { ServiceAccount } from 'firebase-admin';
 import * as fs from 'node:fs';
 import { google } from 'googleapis';
 import * as process from 'node:process';
+import { AppService } from './app.service';
 
 const MESSAGING_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 const SCOPES = [MESSAGING_SCOPE];
@@ -62,6 +63,7 @@ const SCOPES = [MESSAGING_SCOPE];
   controllers: Object.values(controllers),
   providers: [
     AppGateway,
+    AppService,
     ...Object.values(services),
     { provide: APP_INTERCEPTOR, useClass: CacheInterceptor },
     { provide: APP_GUARD, useClass: RateLimitGuards },
@@ -89,6 +91,21 @@ const SCOPES = [MESSAGING_SCOPE];
       useFactory: async () => {
         return await getAppSecrets();
       },
+    },
+    {
+      provide: 'RABBITMQ_CONFIG',
+      useFactory: () => ({
+        RABBITMQ_AMQP_URL:
+          process.env.RABBITMQ_AMQP_URL || 'amqp://localhost:5672',
+        RABBITMQ_USERNAME: process.env.RABBITMQ_USERNAME || 'guest',
+        RABBITMQ_PASSWORD: process.env.RABBITMQ_PASSWORD || 'guest',
+        RABBITMQ_QUEUE: process.env.RABBITMQ_QUEUE || 'nestjs-backend',
+        RABBITMQ_HOST: process.env.RABBITMQ_HOST || 'localhost',
+        RABBITMQ_PORT: process.env.RABBITMQ_PORT || '5672',
+        RABBITMQ_STREAM: process.env.RABBITMQ_STREAM || 'nestjs-backend-stream',
+        RABBITMQ_STREAM_PREFETCH_COUNT:
+          process.env.RABBITMQ_STREAM_PREFETCH_COUNT || 100,
+      }),
     },
   ],
 })

@@ -1,20 +1,31 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { AppGateway } from './app.gateway';
-import { NotificationsService, SystemService } from './services';
-
-class RabbitMQService {}
+import {
+  NotificationsService,
+  RabbitMQService,
+  SystemService,
+} from './services';
 
 @Injectable()
 export class AppService implements OnModuleInit {
   @Inject() private readonly gateway: AppGateway;
   @Inject() private readonly systemService: SystemService;
   @Inject() private readonly notificationsService: NotificationsService;
+  @Inject() private rabbitMQService: RabbitMQService;
 
   async startMonitoring() {
     setInterval(async () => {
-      this.gateway.sendMessage(
-        'monitor',
-        JSON.stringify(await this.systemService.getMonitoringInfo())
+      // Get monitoring info once to avoid duplicate API calls
+      const monitoringInfo = await this.systemService.getMonitoringInfo();
+      const monitoringData = JSON.stringify(monitoringInfo);
+
+      // Send to WebSocket clients
+      this.gateway.sendMessage('monitor', monitoringData);
+
+      // Send to RabbitMQ stream
+      this.rabbitMQService.sendToStream(
+        'nestjs-backend-stream',
+        monitoringData
       );
     }, 2000);
   }
@@ -29,6 +40,7 @@ export class AppService implements OnModuleInit {
   }
 
   async onModuleInit() {
+    console.log('AppService onModuleInit called');
     await this.startMonitoring();
     this.checkForPushSubscription();
   }
