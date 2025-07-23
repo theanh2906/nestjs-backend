@@ -4,6 +4,7 @@ export * from './notifications.service';
 export * from './system.service';
 export * from './firebase.service';
 export * from './file.service';
-export * from './rabbitmq.service';
+export * from './messages.service';
 export * from './cronjobs.service';
 export * from '../shared/utils.service';
+export * from './rabbitmq-client.service';

@@ -11,8 +11,6 @@ import {
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { FileService, FirebaseService, SystemService } from './services';
-import * as fs from 'node:fs';
-import * as path from 'path';
 
 @WebSocketGateway({
   cors: {
@@ -114,50 +112,8 @@ export class AppGateway
   }
 
   @SubscribeMessage('file-sync')
-  async handleFileSync(@ConnectedSocket() client: Socket) {
-    try {
-      this.logger.log(`File sync request from client ${client.id}`);
-
-      // Create a zip file from the folder
-      const zipFilePath =
-        await this.fileService.createZipFromFolder('C:\\Notes');
-      this.logger.log(`Zip file created at: ${zipFilePath}`);
-
-      // Read the zip file from disk
-      const fileInfo = await this.fileService.getFileInfo(zipFilePath);
-      if (!fileInfo) {
-        throw new Error('Failed to get zip file info');
-      }
-
-      // Read the file content
-      const fileBuffer = await fs.promises.readFile(zipFilePath);
-
-      // Create an Express.Multer.File object
-      const multerFile: Express.Multer.File = {
-        fieldname: 'file',
-        originalname: path.basename(zipFilePath),
-        encoding: '7bit',
-        mimetype: 'application/zip',
-        buffer: fileBuffer,
-        size: fileInfo.size,
-        destination: '',
-        filename: path.basename(zipFilePath),
-        path: zipFilePath,
-        stream: null,
-      };
-
-      // Upload the file to Firebase Storage
-      const fileUrl =
-        await this.firebaseService.uploadFilesToStorage(multerFile);
-      this.sendMessage('data-update', 'updated');
-      this.logger.log(`File uploaded to Firebase Storage: ${fileUrl}`);
-
-      // Clean up the local zip file
-      await fs.promises.unlink(zipFilePath);
-      this.logger.log(`Local zip file deleted: ${zipFilePath}`);
-    } catch (error) {
-      this.logger.error(`File sync error: ${error.message}`);
-    }
+  async handleFileSync() {
+    // return this.firebaseService.handleFileSync();
   }
 
   sendMessage(event: string, data: any) {

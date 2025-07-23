@@ -54,7 +54,6 @@ export class SystemService {
         cores: os.cpus().length,
       },
       user: os.userInfo().username,
-      public_ip: await this.executeCommand('curl -s https://api.ipify.org'),
     },
   });
 

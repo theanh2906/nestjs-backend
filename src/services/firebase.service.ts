@@ -9,6 +9,9 @@ import * as admin from 'firebase-admin';
 import { v4 as uuid } from 'uuid';
 import { Bucket } from '@google-cloud/storage';
 import { UtilsService } from '../shared/utils.service';
+import fs from 'node:fs';
+import path from 'path';
+import { FileService } from './file.service';
 
 @Injectable()
 export class FirebaseService extends BaseService implements OnModuleInit {
@@ -20,6 +23,7 @@ export class FirebaseService extends BaseService implements OnModuleInit {
   private bucket: Bucket;
   private message: any;
   @Inject() private readonly utilsService: UtilsService;
+  @Inject() private readonly fileService: FileService;
 
   async fetchData(): Promise<any> {
     const snapshot = await this.database
@@ -94,6 +98,48 @@ export class FirebaseService extends BaseService implements OnModuleInit {
       throw new InternalServerErrorException(
         'Unable to delete one or more files'
       );
+    }
+  }
+
+  async handleFileSync(folderPath: string): Promise<void> {
+    try {
+      // Create a zip file from the folder
+      const zipFilePath =
+        await this.fileService.createZipFromFolder(folderPath);
+      this.logger.log(`Zip file created at: ${zipFilePath}`);
+
+      // Read the zip file from disk
+      const fileInfo = await this.fileService.getFileInfo(zipFilePath);
+      if (!fileInfo) {
+        throw new Error('Failed to get zip file info');
+      }
+
+      // Read the file content
+      const fileBuffer = await fs.promises.readFile(zipFilePath);
+
+      // Create an Express.Multer.File object
+      const multerFile: Express.Multer.File = {
+        fieldname: 'file',
+        originalname: path.basename(zipFilePath),
+        encoding: '7bit',
+        mimetype: 'application/zip',
+        buffer: fileBuffer,
+        size: fileInfo.size,
+        destination: '',
+        filename: path.basename(zipFilePath),
+        path: zipFilePath,
+        stream: null,
+      };
+
+      // Upload the file to Firebase Storage
+      const fileUrl = await this.uploadFilesToStorage(multerFile);
+      this.logger.log(`File uploaded to Firebase Storage: ${fileUrl}`);
+
+      // Clean up the local zip file
+      await fs.promises.unlink(zipFilePath);
+      this.logger.log(`Local zip file deleted: ${zipFilePath}`);
+    } catch (error) {
+      this.logger.error(`File sync error: ${error.message}`);
     }
   }
 

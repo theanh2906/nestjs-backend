@@ -10,6 +10,9 @@ import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import * as amqp from 'amqplib';
 import { Channel } from 'amqplib';
 import { Observable } from 'rxjs';
+import { RabbitMQClientService } from './rabbitmq-client.service';
+import { FirebaseService } from './firebase.service';
+import { MessageType, RabbitMessage } from '../shared/types';
 
 /**
  * RabbitmqService
@@ -18,62 +21,67 @@ import { Observable } from 'rxjs';
  * Supports queue publishing/consuming and STOMP over WebSocket messaging.
  */
 @Injectable()
-export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
+export class MessagesService implements OnModuleInit, OnModuleDestroy {
   protocol: 'AMQP' | 'STOMP' = 'AMQP'; // Default protocol
   @Inject('RABBITMQ_CONFIG') private readonly RABBITMQ_CONFIG: any;
   private client: Client;
   private amqpConnection: amqp.ChannelModel;
   private amqpChannel: Channel;
-  private readonly logger = new Logger(RabbitMQService.name);
+  private readonly logger = new Logger(MessagesService.name);
   private stompSubscriptions: Map<string, StompSubscription> = new Map();
+  @Inject() private readonly rabbitHandler: RabbitMQClientService;
+  @Inject() private readonly firebaseService: FirebaseService;
 
   /**
    * Lifecycle hook: Initializes the RabbitMQ clients on module init.
    * You can choose which protocol to use (STOMP, AMQP, or both).
    */
   async onModuleInit() {
-    if (this.protocol === 'STOMP') {
-      // Initialize STOMP client
-      this.initStomp();
-      // Example of sending a message using STOMP
-      this.sendToStream(
-        this.RABBITMQ_CONFIG.RABBITMQ_STREAM,
-        JSON.stringify({ hello: 'world from STOMP' })
-      );
-    }
+    this.logger.log(
+      `Initializing RabbitMQ service with protocol: ${this.protocol}`
+    );
 
-    if (this.protocol === 'AMQP') {
-      // Initialize AMQP client
-      await this.initAmqpClient();
-      // this.subscribeToStream(this.RABBITMQ_CONFIG.RABBITMQ_STREAM, true);
-    }
+    // Send a test message to the stream
+    await this.sendToStream(
+      this.RABBITMQ_CONFIG.RABBITMQ_STREAM,
+      JSON.stringify({ hello: 'world from RabbitMQService' })
+    );
+
+    // Subscribe to the stream
+    this.subscribeToStream(this.RABBITMQ_CONFIG.RABBITMQ_STREAM, false);
+    this.rabbitHandler
+      .subscribeToQueue(this.RABBITMQ_CONFIG.RABBITMQ_QUEUE)
+      .subscribe(async (content) => {
+        const message = JSON.parse(content) as RabbitMessage;
+        switch (message.type) {
+          case MessageType.NOTE_SYNC:
+            await this.firebaseService.handleFileSync(message.data.folder_path);
+            break;
+          default:
+            break;
+        }
+        this.logger.log(`Received message from queue: ${message}`);
+      });
+
+    this.logger.log('RabbitMQ service initialized successfully');
   }
 
   /**
-   * Lifecycle hook: Cleans up STOMP and AMQP connections on module destroy.
+   * Lifecycle hook: Cleans up connections on module destroy.
    */
   async onModuleDestroy() {
-    // Clean up STOMP connections
-    if (this.client) await this.client.deactivate();
-    this.unsubscribeStomp('/queue/nestjs-backend');
+    this.logger.log('Cleaning up RabbitMQ connections');
 
-    // Clean up AMQP connections
-    if (this.amqpChannel) {
-      try {
-        await this.amqpChannel.close();
-        this.logger.log('AMQP channel closed');
-      } catch (error) {
-        this.logger.error('Error closing AMQP channel: ' + error.message);
-      }
-    }
+    try {
+      // Clean up STOMP subscriptions
+      this.unsubscribeStomp('/queue/nestjs-backend');
 
-    if (this.amqpConnection) {
-      try {
-        await this.amqpConnection.close();
-        this.logger.log('AMQP connection closed');
-      } catch (error) {
-        this.logger.error('Error closing AMQP connection: ' + error.message);
-      }
+      // Close all connections through the handler
+      await this.rabbitHandler.closeConnections();
+
+      this.logger.log('RabbitMQ connections closed successfully');
+    } catch (error) {
+      this.logger.error(`Error closing RabbitMQ connections: ${error.message}`);
     }
   }
 
@@ -128,114 +136,52 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
   }
 
   subscribeToStream(stream: string, fromFirst: boolean = false) {
-    switch (this.protocol) {
-      case 'STOMP':
-        this.client.subscribe(
-          `/queue/${stream}`,
-          (message) => {
-            const content = message.body;
-            const offset = message.headers['x-stream-offset'] || 'N/A';
-            this.logger.log(`Received message: ${content} (offset: ${offset})`);
-            message.ack(); // Manual acknowledgment
-          },
-          {
-            ack: 'client-individual', // Manual acknowledgment
-            'prefetch-count': '100', // Limit messages per fetch
-            'x-queue-type': 'stream', // Declare as stream
-            'x-stream-offset': fromFirst ? 'first' : 'next', // Start from new messages
-          }
-        );
-        this.logger.log(`Subscribed to stream: nestjs-backend-stream`);
-        break;
-      case 'AMQP':
-        if (!this.amqpChannel) {
-          throw new Error('AMQP channel not initialized');
-        }
+    this.logger.log(`Delegating subscribeToStream to RabbitHandler: ${stream}`);
 
-        this.amqpSubscribeStream(stream, fromFirst).subscribe({
-          next: (_msg) => {},
-        });
-
-        this.logger.log(`Subscribed to AMQP stream: ${stream}`);
-        break;
-    }
+    return this.rabbitHandler.subscribeToStream(
+      stream,
+      fromFirst,
+      this.protocol,
+      (content) => {
+        this.logger.log(`Received message from stream ${stream}: ${content}`);
+      }
+    );
   }
 
   async sendToStream(stream: string, message: any) {
-    switch (this.protocol) {
-      case 'STOMP':
-        if (!this.client || !this.client.connected) {
-          this.initStomp();
-        }
-        this.client.publish({
-          destination: `/queue/${stream}`,
-          body: JSON.stringify(message),
-          headers: {
-            'x-stream-offset': 'first', // Start from new messages
-          },
-        });
-        this.logger.log(`Sent message to stream: ${message}`);
-        break;
-      case 'AMQP':
-        if (!this.amqpChannel) {
-          await this.initAmqpClient();
-        }
+    this.logger.log(`Delegating sendToStream to RabbitHandler: ${stream}`);
 
-        try {
-          // Ensure the stream queue exists with the correct type
-          await this.amqpChannel.assertQueue(stream, {
-            durable: true,
-            arguments: {
-              'x-queue-type': 'stream',
-              'x-max-age': '1Y',
-              'x-max-length-bytes': 2000000000, // 2GB max size
-            },
-          });
-
-          this.amqpChannel.sendToQueue(
-            stream,
-            Buffer.from(
-              typeof message === 'string' ? message : JSON.stringify(message)
-            ),
-            { persistent: true } // Ensure message persistence
-          );
-        } catch (error) {
-          this.logger.error(
-            `Failed to send message to stream ${stream}: ${error.message}`
-          );
-          throw error;
-        }
-        break;
+    try {
+      await this.rabbitHandler.sendToStream(stream, message, this.protocol);
+      this.logger.log(`Successfully sent message to stream: ${stream}`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to send message to stream ${stream}: ${error.message}`
+      );
+      throw error;
     }
   }
 
-  sendToExchange(exchange: string, message: any) {
-    switch (this.protocol) {
-      case 'STOMP':
-        if (!this.client || !this.client.connected) {
-          throw new Error('STOMP client not connected');
-        }
-        this.client.publish({
-          destination: `/exchange/${exchange}`,
-          body: JSON.stringify(message),
-          headers: {
-            'content-type': 'application/json',
-          },
-        });
-        this.logger.log(`Sent message to exchange: nestjs-backend`);
-        break;
-      case 'AMQP':
-        if (!this.amqpChannel) {
-          throw new Error('AMQP channel not initialized');
-        }
-        this.amqpChannel.publish(
-          exchange,
-          '',
-          Buffer.from(JSON.stringify(message)),
-          { persistent: true } // Ensure message persistence
-        );
-        this.logger.log(`Sent message to AMQP exchange: ${exchange}`);
-        break;
+  async sendToExchange(
+    exchange: string,
+    message: any,
+    routingKey: string = ''
+  ) {
+    this.logger.log(`Delegating sendToExchange to RabbitHandler: ${exchange}`);
+
+    try {
+      await this.rabbitHandler.sendToExchange(
+        exchange,
+        message,
+        routingKey,
+        this.protocol
+      );
+      this.logger.log(`Successfully sent message to exchange: ${exchange}`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to send message to exchange ${exchange}: ${error.message}`
+      );
+      throw error;
     }
   }
 

@@ -1,8 +1,8 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { AppGateway } from './app.gateway';
 import {
+  MessagesService,
   NotificationsService,
-  RabbitMQService,
   SystemService,
 } from './services';
 
@@ -11,7 +11,7 @@ export class AppService implements OnModuleInit {
   @Inject() private readonly gateway: AppGateway;
   @Inject() private readonly systemService: SystemService;
   @Inject() private readonly notificationsService: NotificationsService;
-  @Inject() private rabbitMQService: RabbitMQService;
+  @Inject() private rabbitMQService: MessagesService;
 
   async startMonitoring() {
     setInterval(async () => {
@@ -23,10 +23,10 @@ export class AppService implements OnModuleInit {
       this.gateway.sendMessage('monitor', monitoringData);
 
       // Send to RabbitMQ stream
-      this.rabbitMQService.sendToStream(
-        'nestjs-backend-stream',
-        monitoringData
-      );
+      // this.rabbitMQService.sendToStream(
+      //   'nestjs-backend-stream',
+      //   monitoringData
+      // );
     }, 2000);
   }
 

@@ -99,7 +99,7 @@ const SCOPES = [MESSAGING_SCOPE];
           process.env.RABBITMQ_AMQP_URL || 'amqp://localhost:5672',
         RABBITMQ_USERNAME: process.env.RABBITMQ_USERNAME || 'guest',
         RABBITMQ_PASSWORD: process.env.RABBITMQ_PASSWORD || 'guest',
-        RABBITMQ_QUEUE: process.env.RABBITMQ_QUEUE || 'nestjs-backend',
+        RABBITMQ_QUEUE: process.env.RABBITMQ_QUEUE || 'nestjs-backend-queue',
         RABBITMQ_HOST: process.env.RABBITMQ_HOST || 'localhost',
         RABBITMQ_PORT: process.env.RABBITMQ_PORT || '5672',
         RABBITMQ_STREAM: process.env.RABBITMQ_STREAM || 'nestjs-backend-stream',
