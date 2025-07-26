@@ -32,29 +32,25 @@ export class SystemService {
   @Inject() private readonly utils: UtilsService;
 
   getMonitoringInfo = async () => ({
-    used_memory: this.utils.convertCapacity(os.totalmem() - os.freemem()),
-    free_memory: this.utils.convertCapacity(os.freemem()),
-    total_memory: this.utils.convertCapacity(os.totalmem()),
-    used_memory_percentage: this.utils.calculatePercentage(
-      os.totalmem() - os.freemem(),
-      os.totalmem()
-    ),
-    uptime: this.utils.convertTime(os.uptime()),
-    raw_data: {
-      used_memory: os.totalmem() - os.freemem(),
-      free_memory: os.freemem(),
-      total_memory: os.totalmem(),
-    },
-    system_info: {
-      os: os.version(),
-      model: os.hostname(),
-      cpu: {
-        model: os.cpus()[0].model,
-        speed: os.cpus()[0].speed,
-        cores: os.cpus().length,
+    device_name: os.hostname(),
+    data: JSON.stringify({
+      used_memory: this.utils.calculatePercentage(
+        os.totalmem() - os.freemem(),
+        os.totalmem()
+      ),
+      uptime: this.utils.convertTime(os.uptime()),
+      system_info: {
+        os: os.version(),
+        model: os.hostname(),
+        cpu: {
+          model: os.cpus()[0].model,
+          speed: os.cpus()[0].speed,
+          cores: os.cpus().length,
+        },
+        user: os.userInfo().username,
       },
-      user: os.userInfo().username,
-    },
+    }),
+    timestamp: Date.now(),
   });
 
   executeCommand = (command: string): Promise<string> =>

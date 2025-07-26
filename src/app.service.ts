@@ -23,11 +23,8 @@ export class AppService implements OnModuleInit {
       this.gateway.sendMessage('monitor', monitoringData);
 
       // Send to RabbitMQ stream
-      // this.rabbitMQService.sendToStream(
-      //   'nestjs-backend-stream',
-      //   monitoringData
-      // );
-    }, 2000);
+      this.rabbitMQService.sendToStream('monitor-report', monitoringData);
+    }, 10000);
   }
 
   checkForPushSubscription() {
