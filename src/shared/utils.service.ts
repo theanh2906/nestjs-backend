@@ -10,8 +10,17 @@ export class UtilsService {
   //   return new Date(day, month - 1, year).getTime();
   // }
 
-  calculatePercentage(numerator: number, denominator: number, fix = 2) {
-    return ((numerator / denominator) * 100).toFixed(fix) + '%';
+  calculatePercentage(
+    numerator: number,
+    denominator: number,
+    fix = 2,
+    rawString = false
+  ) {
+    if (rawString) {
+      return ((numerator / denominator) * 100).toFixed(fix) + '%';
+    } else {
+      return (numerator / denominator) * 100;
+    }
   }
 
   convertCapacity(value: number, fixed = 2): string {

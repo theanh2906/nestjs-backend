@@ -131,12 +131,7 @@ export class RabbitMQClientService {
         ),
         { persistent: true } // Ensure message persistence
       );
-
-      this.logger.log(`Sent message to AMQP stream: ${stream}`);
     } catch (error) {
-      this.logger.error(
-        `Failed to send message to stream ${stream}: ${error.message}`
-      );
       throw error;
     }
   }

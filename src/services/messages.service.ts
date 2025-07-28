@@ -149,15 +149,9 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
   }
 
   async sendToStream(stream: string, message: any) {
-    this.logger.log(`Delegating sendToStream to RabbitHandler: ${stream}`);
-
     try {
       await this.rabbitHandler.sendToStream(stream, message, this.protocol);
-      this.logger.log(`Successfully sent message to stream: ${stream}`);
     } catch (error) {
-      this.logger.error(
-        `Failed to send message to stream ${stream}: ${error.message}`
-      );
       throw error;
     }
   }
