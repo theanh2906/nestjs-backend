@@ -95,6 +95,7 @@ const SCOPES = [MESSAGING_SCOPE];
     {
       provide: 'RABBITMQ_CONFIG',
       useFactory: () => ({
+        RABBITMQ_ENABLED: process.env.RABBITMQ_ENABLED === 'true',
         RABBITMQ_AMQP_URL:
           process.env.RABBITMQ_AMQP_URL || 'amqp://localhost:5672',
         RABBITMQ_USERNAME: process.env.RABBITMQ_USERNAME || 'guest',
@@ -105,6 +106,19 @@ const SCOPES = [MESSAGING_SCOPE];
         RABBITMQ_STREAM: process.env.RABBITMQ_STREAM || 'nestjs-backend-stream',
         RABBITMQ_STREAM_PREFETCH_COUNT:
           process.env.RABBITMQ_STREAM_PREFETCH_COUNT || 100,
+      }),
+    },
+    {
+      provide: 'KAFKA_CONFIG',
+      useFactory: () => ({
+        KAFKA_ENABLED: process.env.KAFKA_ENABLED === 'true',
+        KAFKA_BROKERS: process.env.KAFKA_BROKERS?.split(',') || [
+          'localhost:9092',
+        ],
+        KAFKA_CLIENT_ID: process.env.KAFKA_CLIENT_ID || 'nestjs-backend',
+        KAFKA_GROUP_ID: process.env.KAFKA_GROUP_ID || 'nestjs-backend-group',
+        KAFKA_TOPIC: process.env.KAFKA_TOPIC || 'nestjs-backend-topic',
+        KAFKA_SSL: process.env.KAFKA_SSL === 'true',
       }),
     },
   ],

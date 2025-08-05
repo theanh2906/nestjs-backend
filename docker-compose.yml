@@ -3,6 +3,8 @@ services:
     image: theanh2906/nestjs-backend
     container_name: nestjs-backend
     network_mode: host
+    dns:
+      - 8.8.8.8
     build:
       context: .
       dockerfile: Dockerfile

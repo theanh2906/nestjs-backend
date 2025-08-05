@@ -37,6 +37,9 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
    * You can choose which protocol to use (STOMP, AMQP, or both).
    */
   async onModuleInit() {
+    if (!this.RABBITMQ_CONFIG.RABBITMQ_ENABLED) {
+      return;
+    }
     this.logger.log(
       `Initializing RabbitMQ service with protocol: ${this.protocol}`
     );
@@ -136,6 +139,9 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
   }
 
   subscribeToStream(stream: string, fromFirst: boolean = false) {
+    if (!this.RABBITMQ_CONFIG.RABBITMQ_ENABLED) {
+      return;
+    }
     this.logger.log(`Delegating subscribeToStream to RabbitHandler: ${stream}`);
 
     return this.rabbitHandler.subscribeToStream(
@@ -149,6 +155,9 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
   }
 
   async sendToStream(stream: string, message: any) {
+    if (!this.RABBITMQ_CONFIG.RABBITMQ_ENABLED) {
+      return;
+    }
     try {
       await this.rabbitHandler.sendToStream(stream, message, this.protocol);
     } catch (error) {
@@ -251,47 +260,5 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
     };
 
     this.client.activate();
-  }
-
-  /**
-   * Initializes the AMQP client using configuration.
-   * @returns Promise resolving to the AMQP channel
-   */
-  private async initAmqpClient(): Promise<Channel> {
-    try {
-      const amqpUrl =
-        this.RABBITMQ_CONFIG.RABBITMQ_AMQP_URL ||
-        `amqp://${this.RABBITMQ_CONFIG.RABBITMQ_USERNAME}:${this.RABBITMQ_CONFIG.RABBITMQ_PASSWORD}@${this.RABBITMQ_CONFIG.RABBITMQ_HOST}:${this.RABBITMQ_CONFIG.RABBITMQ_PORT}`;
-
-      // Create a connection
-      this.amqpConnection = await amqp.connect(amqpUrl);
-      this.logger.log('AMQP connected');
-
-      // Handle connection errors and closures
-      this.amqpConnection.on('error', (err) => {
-        this.logger.error('AMQP connection error: ' + err.message);
-      });
-
-      this.amqpConnection.on('close', () => {
-        this.logger.warn('AMQP connection closed');
-      });
-
-      // Create a channel
-      this.amqpChannel = await this.amqpConnection.createChannel();
-
-      // Handle channel errors
-      this.amqpChannel.on('error', (err) => {
-        this.logger.error('AMQP channel error: ' + err.message);
-      });
-
-      this.amqpChannel.on('close', () => {
-        this.logger.warn('AMQP channel closed');
-      });
-
-      return this.amqpChannel;
-    } catch (error) {
-      this.logger.error('Failed to initialize AMQP client: ' + error.message);
-      throw error;
-    }
   }
 }
