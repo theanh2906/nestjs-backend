@@ -1,9 +1,9 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { AppGateway } from './app.gateway';
 import {
+  KafkaService,
   MessagesService,
   NotificationsService,
-  SseService,
   SystemService,
 } from './services';
 import { SseEvent } from './shared/types';
@@ -14,7 +14,7 @@ export class AppService implements OnModuleInit {
   @Inject() private readonly systemService: SystemService;
   @Inject() private readonly notificationsService: NotificationsService;
   @Inject() private rabbitMQService: MessagesService;
-  @Inject() private sseService: SseService;
+  @Inject() private kafkaService: KafkaService;
 
   async startMonitoring() {
     setInterval(async () => {
@@ -23,13 +23,16 @@ export class AppService implements OnModuleInit {
       const monitoringData = JSON.stringify(monitoringInfo);
 
       // Send to WebSocket clients
-      this.gateway.sendMessage('monitor', monitoringData);
+      // this.gateway.sendMessage('monitor', monitoringData);
 
       // Send to SSE clients
-      this.sseService.emit(SseEvent.MonitorReport, monitoringData);
+      // this.sseService.emit(SseEvent.MonitorReport, monitoringData);
 
-      // Send to RabbitMQ stream
-      // this.rabbitMQService.sendToStream('monitor-report', monitoringData);
+      // Send to Kafka Stream
+      await this.kafkaService.publishSingleMessage(
+        SseEvent.MonitorReport,
+        monitoringData
+      );
     }, 10000);
   }
 

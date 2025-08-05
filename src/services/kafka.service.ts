@@ -15,6 +15,8 @@ import {
   Partitioners,
   Producer,
 } from 'kafkajs';
+import { SseService } from './sse.service';
+import { SseEvent } from '../shared/types';
 
 export interface KafkaConfig {
   clientId: string;
@@ -61,6 +63,7 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   private admin: Admin;
   private isConnected = false;
   @Inject('KAFKA_CONFIG') private readonly KAFKA_CONFIG: any;
+  @Inject() private readonly sseService: SseService;
 
   async onModuleInit() {
     if (!this.KAFKA_CONFIG.KAFKA_ENABLED) {
@@ -88,24 +91,27 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
     });
     this.admin = this.kafka.admin();
     await this.connect();
-    await this.createTopicIfNotExists({
-      topic: this.KAFKA_CONFIG.KAFKA_TOPIC,
-      numPartitions: 1, // Default partition count
-      replicationFactor: 1, // Default replication factor
-      configEntries: [], // No additional config entries by default
-    });
-    await this.createConsumerGroupIfNotExists(this.KAFKA_CONFIG.KAFKA_GROUP_ID);
+    // await this.createTopicIfNotExists({
+    //   topic: this.KAFKA_CONFIG.KAFKA_TOPIC,
+    //   numPartitions: 1, // Default partition count
+    //   replicationFactor: 1, // Default replication factor
+    //   configEntries: [], // No additional config entries by default
+    // });
+    await this.createConsumerGroupIfNotExists(
+      `${SseEvent.MonitorReport}-group`
+    );
     await this.consumeMessages(
       {
-        topic: this.KAFKA_CONFIG.KAFKA_TOPIC,
-        groupId: this.KAFKA_CONFIG.KAFKA_GROUP_ID,
-        fromBeginning: true,
+        topic: SseEvent.MonitorReport,
+        groupId: `${SseEvent.MonitorReport}-group`,
+        fromBeginning: false,
         autoCommit: true,
       },
       async (payload: EachMessagePayload) => {
         // Default message handler, can be overridden by user
-        this.logger.log(
-          `Received message on topic ${payload.topic}: ${payload.message.value.toString()}`
+        this.sseService.emit(
+          SseEvent.MonitorReport,
+          payload.message.value.toString()
         );
       }
     );
@@ -178,10 +184,6 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
           headers: msg.headers,
         })),
       });
-
-      this.logger.log(
-        `Successfully published ${options.messages.length} messages to topic: ${options.topic}`
-      );
       return result;
     } catch (error) {
       this.logger.error(
@@ -235,9 +237,6 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
         autoCommit: options.autoCommit !== false,
         eachMessage: async (payload) => {
           try {
-            this.logger.debug(
-              `Received message from topic: ${payload.topic}, partition: ${payload.partition}, offset: ${payload.message.offset}`
-            );
             await messageHandler(payload);
           } catch (error) {
             this.logger.error(
