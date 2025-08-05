@@ -9,3 +9,4 @@ export * from './cronjobs.service';
 export * from '../shared/utils.service';
 export * from './rabbitmq-client.service';
 export * from './kafka.service';
+export * from './sse.service';

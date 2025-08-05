@@ -3,8 +3,10 @@ import { AppGateway } from './app.gateway';
 import {
   MessagesService,
   NotificationsService,
+  SseService,
   SystemService,
 } from './services';
+import { SseEvent } from './shared/types';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -12,6 +14,7 @@ export class AppService implements OnModuleInit {
   @Inject() private readonly systemService: SystemService;
   @Inject() private readonly notificationsService: NotificationsService;
   @Inject() private rabbitMQService: MessagesService;
+  @Inject() private sseService: SseService;
 
   async startMonitoring() {
     setInterval(async () => {
@@ -22,8 +25,11 @@ export class AppService implements OnModuleInit {
       // Send to WebSocket clients
       this.gateway.sendMessage('monitor', monitoringData);
 
+      // Send to SSE clients
+      this.sseService.emit(SseEvent.MonitorReport, monitoringData);
+
       // Send to RabbitMQ stream
-      this.rabbitMQService.sendToStream('monitor-report', monitoringData);
+      // this.rabbitMQService.sendToStream('monitor-report', monitoringData);
     }, 10000);
   }
 

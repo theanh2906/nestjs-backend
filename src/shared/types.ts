@@ -7,3 +7,7 @@ export type RabbitMessage = {
   data: any;
   timestamp: number;
 };
+
+export enum SseEvent {
+  MonitorReport = 'monitor-report',
+}
