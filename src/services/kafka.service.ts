@@ -203,6 +203,7 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
     key?: string,
     headers?: Record<string, string>
   ): Promise<void> {
+    if (this.KAFKA_CONFIG.KAFKA_ENABLED === false) return;
     return this.publishMessage({
       topic,
       messages: [{ key, value: message, headers }],
