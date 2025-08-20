@@ -3,6 +3,9 @@ import { AppModule } from './app.module';
 import { DataModificationInterceptor } from './interceptors/data-modification.interceptor';
 import { AppGateway } from './app.gateway';
 import * as glob from 'glob';
+import { setDefaultResultOrder } from 'dns';
+
+setDefaultResultOrder('ipv4first');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
