@@ -4,8 +4,9 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { Observable, tap } from 'rxjs';
+import { Observable } from 'rxjs';
 import { AppGateway } from '../app.gateway';
+import type { Response } from 'express';
 
 @Injectable()
 export class DataModificationInterceptor implements NestInterceptor {
@@ -15,18 +16,12 @@ export class DataModificationInterceptor implements NestInterceptor {
     context: ExecutionContext,
     next: CallHandler
   ): Observable<any> | Promise<Observable<any>> {
-    const response = context.switchToHttp().getResponse();
+    const response = context.switchToHttp().getResponse<Response>();
     const request = context.switchToHttp().getRequest();
-    const method = request.method;
-    return next.handle().pipe(
-      tap(() => {
-        if (
-          (method === 'POST' || method === 'PUT' || method === 'DELETE') &&
-          response.statusCode.toString().startsWith('2')
-        ) {
-          this.gateway.sendMessage('data-update', 'update');
-        }
-      })
+    response.setHeader(
+      'Content-Security-Policy',
+      "frame-ancestors 'self' https://benna.vercel.app"
     );
+    return next.handle();
   }
 }
