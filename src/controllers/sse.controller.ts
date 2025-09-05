@@ -9,6 +9,7 @@ export class SseController {
   @Inject() private readonly sseService: SseService;
   @Sse(SseEvent.MonitorReport)
   sendMonitoringData() {
+    console.log('sse event triggered');
     return this.sseService.getEvent(SseEvent.MonitorReport);
   }
 }

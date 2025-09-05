@@ -23,16 +23,15 @@ export class NotificationsService implements OnModuleInit {
     return this._token.value;
   }
 
-  set token(token: string) {
+  setToken(token: string) {
     this._token.next(token);
   }
 
   async sendPushNotification(payload: any) {
     try {
       const message: admin.messaging.Message = {
-        token: this.token,
+        token: payload.token || this.token,
         notification: payload.notification,
-        data: payload,
       };
       const response = await this.messaging.send(message);
       console.log('Successfully sent message:', response);

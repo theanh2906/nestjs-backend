@@ -8,8 +8,14 @@ export class NotificationsController {
   @Post('/subscribe')
   async subscribe(@Body() token: any) {
     console.log('Subscription received:', token);
-    this.notificationsService.token = token.token;
+    this.notificationsService.setToken(token.token);
 
     return { message: 'Subscription saved' };
+  }
+
+  @Post('/send')
+  async sendPushNotification(@Body() payload: any) {
+    console.log('Sending push notification:', payload);
+    this.notificationsService.sendPushNotification(payload);
   }
 }

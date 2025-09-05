@@ -1,3 +1,4 @@
+import { Bucket } from '@google-cloud/storage';
 import {
   BadRequestException,
   Body,
@@ -17,23 +18,22 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import * as fs from 'fs';
-import * as path from 'path';
-import { FileTypes } from '../shared/constants';
-import * as process from 'node:process';
 import { ConfigService } from '@nestjs/config';
 import {
   FileFieldsInterceptor,
   FilesInterceptor,
 } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { UtilsService } from '../shared/utils.service';
-import { BaseController } from '../shared/base.controller';
-import { FileService, FirebaseService } from '../services';
 import { SkipThrottle } from '@nestjs/throttler';
 import * as admin from 'firebase-admin';
-import { Bucket } from '@google-cloud/storage';
+import * as fs from 'fs';
+import { diskStorage } from 'multer';
+import * as process from 'node:process';
+import * as path from 'path';
 import { AppGateway } from '../app.gateway';
+import { FileService, FirebaseService } from '../services';
+import { BaseController } from '../shared/base.controller';
+import { FileTypes } from '../shared/constants';
+import { UtilsService } from '../shared/utils.service';
 
 @Controller({
   path: '/api/files',
