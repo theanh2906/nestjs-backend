@@ -18,10 +18,10 @@ export class DataModificationInterceptor implements NestInterceptor {
   ): Observable<any> | Promise<Observable<any>> {
     const response = context.switchToHttp().getResponse<Response>();
     const request = context.switchToHttp().getRequest();
-    response.setHeader(
-      'Content-Security-Policy',
-      "frame-ancestors 'self' https://benna.vercel.app"
-    );
+    // response.setHeader(
+    //   'Content-Security-Policy',
+    //   "frame-ancestors 'self' https://benna.vercel.app"
+    // );
     return next.handle();
   }
 }
