@@ -9,6 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import { MulterModule } from '@nestjs/platform-express';
 import multer from 'multer';
 import { TerminusModule } from '@nestjs/terminus';
+import { ScheduleModule } from '@nestjs/schedule';
 import * as services from './services';
 import * as controllers from './controllers';
 import * as admin from 'firebase-admin';
@@ -25,6 +26,7 @@ const SCOPES = [MESSAGING_SCOPE];
   imports: [
     HttpModule,
     TerminusModule,
+    ScheduleModule.forRoot(),
     CacheModule.register(),
     ConfigModule.forRoot({
       envFilePath: `src/environments/${process.env.NODE_ENV}.env`,
