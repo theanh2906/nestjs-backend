@@ -21,7 +21,7 @@ export interface SseMessage {
   retry?: number;
 }
 
-@Controller('kafka-monitor')
+@Controller('/api/kafka-monitor')
 @UseGuards(RateLimitGuards)
 export class KafkaMonitorController {
   private readonly logger = new Logger(KafkaMonitorController.name);
