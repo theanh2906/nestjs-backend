@@ -16,6 +16,7 @@ services:
     restart: always
     volumes:
       - obsidian-notes:/data/obsidian-notes
+      - firebase:/data/firebase
 #    depends_on:
 #      - rabbitmq
 #  rabbitmq:
@@ -39,3 +40,14 @@ services:
 
 volumes:
   obsidian-notes:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/benna/backup_data/obsidian_notes
+      o: bind
+  firebase:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/benna/backup_data/firebase
+      o: bind

@@ -143,6 +143,23 @@ export class FirebaseService extends BaseService implements OnModuleInit {
     }
   }
 
+  async getAllCollections() {
+    return this.database
+      .ref()
+      .once('value')
+      .then((snapshot) => {
+        const collections = [];
+        snapshot.forEach((childSnapshot) => {
+          collections.push(childSnapshot.key);
+        });
+        return collections;
+      });
+  }
+
+  async getCollectionData(collectionName: string) {
+    return this.database.ref(collectionName).once('value');
+  }
+
   onModuleInit(): any {
     this.database = this.firebaseApp.database();
     this.bucket = this.firebaseApp.storage().bucket();

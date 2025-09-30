@@ -7,3 +7,4 @@ export * from './webhook.controller';
 export * from '../health/health.controller';
 export * from './sse.controller';
 export * from './kafka-monitor.controller';
+export * from './jenkins.controller';
