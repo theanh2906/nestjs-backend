@@ -1,5 +1,5 @@
 import { Body, Controller, Inject, Logger, Post } from '@nestjs/common';
-import { KafkaService } from 'src/services';
+import { KafkaService } from '../services';
 
 @Controller('/api/messages')
 export class MessagesController {
