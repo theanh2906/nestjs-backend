@@ -1,4 +1,4 @@
-import { Controller, Inject, Sse, Query, Param } from '@nestjs/common';
+import { Controller, Inject, Query, Sse } from '@nestjs/common';
 import { SseEvent } from '../shared/types';
 import { SseService } from '../services';
 import { JenkinsService } from '../services/jenkins.service';

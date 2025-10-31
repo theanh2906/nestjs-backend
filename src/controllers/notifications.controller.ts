@@ -16,6 +16,6 @@ export class NotificationsController {
   @Post('/send')
   async sendPushNotification(@Body() payload: any) {
     console.log('Sending push notification:', payload);
-    this.notificationsService.sendPushNotification(payload);
+    await this.notificationsService.sendPushNotification(payload);
   }
 }

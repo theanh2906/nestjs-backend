@@ -1,12 +1,12 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
-  Observable,
-  Subject,
   interval,
+  map,
+  Observable,
+  startWith,
+  Subject,
   switchMap,
   takeWhile,
-  map,
-  startWith,
 } from 'rxjs';
 import { SseEvent } from '../shared/types';
 import { JenkinsService } from './jenkins.service';

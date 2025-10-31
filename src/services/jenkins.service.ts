@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 
@@ -91,145 +91,15 @@ export class JenkinsService {
     this.jenkinsUrl = process.env.JENKINS_URL || 'https://jenkins.benna.life';
 
     // Optional: Set up authentication if credentials are provided
-    if (process.env.JENKINS_USERNAME && process.env.JENKINS_PASSWORD) {
-      const credentials = Buffer.from(
-        `${process.env.JENKINS_USERNAME}:${process.env.JENKINS_PASSWORD}`
-      ).toString('base64');
+    // Prefer API token over password for better security
+    const username = process.env.JENKINS_USERNAME;
+    const token = process.env.JENKINS_API_TOKEN || process.env.JENKINS_PASSWORD;
+
+    if (username && token) {
+      const credentials = Buffer.from(`${username}:${token}`).toString(
+        'base64'
+      );
       this.jenkinsAuth = `Basic ${credentials}`;
-    }
-  }
-
-  private getHeaders(includeCrumb: boolean = false) {
-    const headers: any = {
-      'Content-Type': 'application/json',
-    };
-
-    if (this.jenkinsAuth) {
-      headers['Authorization'] = this.jenkinsAuth;
-    }
-
-    return headers;
-  }
-
-  private async getCrumb(): Promise<{
-    crumb: string;
-    crumbRequestField: string;
-  } | null> {
-    try {
-      const crumbData = await this.makeRequest('/crumbIssuer/api/json', 'GET');
-      console.log(
-        `Got Jenkins crumb: ${crumbData.crumbRequestField} = ${crumbData.crumb}`
-      );
-      return {
-        crumb: crumbData.crumb,
-        crumbRequestField: crumbData.crumbRequestField,
-      };
-    } catch (error) {
-      console.log(
-        'CSRF crumb not available, continuing without it:',
-        error.message
-      );
-      return null;
-    }
-  }
-
-  private async triggerBuildAlternative(
-    jobName: string,
-    parameters?: Record<string, any>
-  ): Promise<{ message: string; queueId?: number }> {
-    const encodedJobName = encodeURIComponent(jobName);
-
-    try {
-      // Try method 1: Direct API call with token (often bypasses CSRF)
-      const endpoint =
-        parameters && Object.keys(parameters).length > 0
-          ? `/job/${encodedJobName}/buildWithParameters`
-          : `/job/${encodedJobName}/build`;
-
-      const url = `${this.jenkinsUrl}${endpoint}`;
-
-      // Prepare form data if needed
-      let formData = '';
-      if (parameters && Object.keys(parameters).length > 0) {
-        formData = new URLSearchParams(parameters).toString();
-      }
-
-      const config = {
-        method: 'POST' as const,
-        url,
-        headers: this.getHeaders(),
-        timeout: 30000,
-        data: formData,
-      };
-
-      const response = await firstValueFrom(this.httpService.request(config));
-
-      return {
-        message: `Build triggered successfully for job: ${jobName}`,
-      };
-    } catch (error) {
-      console.log('Alternative method failed, trying original approach');
-      throw error;
-    }
-  }
-
-  private async makeRequest(
-    endpoint: string,
-    method: 'GET' | 'POST' = 'GET',
-    data?: any
-  ) {
-    try {
-      const url = `${this.jenkinsUrl}${endpoint}`;
-      const config = {
-        method,
-        url,
-        headers: this.getHeaders(),
-        timeout: 30000, // 30 second timeout
-        data,
-      };
-
-      const response = await firstValueFrom(this.httpService.request(config));
-      return response.data;
-    } catch (error) {
-      console.error(`Jenkins API Error (${endpoint}):`, error.message);
-
-      if (error.response) {
-        const status = error.response.status;
-        const message = error.response.data?.message || error.message;
-
-        switch (status) {
-          case 401:
-            throw new HttpException(
-              'Jenkins authentication failed',
-              HttpStatus.UNAUTHORIZED
-            );
-          case 403:
-            throw new HttpException(
-              'Jenkins access forbidden',
-              HttpStatus.FORBIDDEN
-            );
-          case 404:
-            throw new HttpException(
-              'Jenkins resource not found',
-              HttpStatus.NOT_FOUND
-            );
-          case 500:
-            throw new HttpException(
-              'Jenkins server error',
-              HttpStatus.INTERNAL_SERVER_ERROR
-            );
-          default:
-            throw new HttpException(
-              `Jenkins error: ${message}`,
-              HttpStatus.BAD_GATEWAY
-            );
-        }
-      }
-
-      throw new HttpException(
-        'Unable to connect to Jenkins server',
-        HttpStatus.SERVICE_UNAVAILABLE
-      );
     }
   }
 
@@ -285,179 +155,6 @@ export class JenkinsService {
       );
       // Fall back to CSRF method
       return await this.triggerBuildWithCSRF(jobName, parameters);
-    }
-  }
-
-  private async triggerBuildSimple(
-    jobName: string,
-    parameters?: Record<string, any>
-  ): Promise<{ message: string; queueId?: number }> {
-    const encodedJobName = encodeURIComponent(jobName);
-    const endpoint =
-      parameters && Object.keys(parameters).length > 0
-        ? `/job/${encodedJobName}/buildWithParameters`
-        : `/job/${encodedJobName}/build`;
-
-    let formData = '';
-    if (parameters && Object.keys(parameters).length > 0) {
-      formData = new URLSearchParams(parameters).toString();
-    }
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(`${this.jenkinsUrl}${endpoint}`, formData, {
-          headers: {
-            ...this.getHeaders(),
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          timeout: 30000,
-          validateStatus: (status) => status < 400,
-        })
-      );
-
-      return {
-        message: `Build triggered successfully for job: ${jobName}`,
-        queueId: this.extractQueueId(response.headers?.location),
-      };
-    } catch (error) {
-      if (error.response?.status === 201) {
-        // 201 is success for Jenkins
-        return {
-          message: `Build triggered successfully for job: ${jobName}`,
-          queueId: this.extractQueueId(error.response.headers?.location),
-        };
-      }
-      throw error;
-    }
-  }
-
-  private extractQueueId(location?: string): number | undefined {
-    if (location) {
-      const queueMatch = location.match(/\/queue\/item\/(\d+)/);
-      if (queueMatch) {
-        return parseInt(queueMatch[1]);
-      }
-    }
-    return undefined;
-  }
-
-  private async triggerBuildWithCSRF(
-    jobName: string,
-    parameters?: Record<string, any>
-  ): Promise<{ message: string; queueId?: number }> {
-    const encodedJobName = encodeURIComponent(jobName);
-    let endpoint = `/job/${encodedJobName}/build`;
-
-    let postData = null;
-
-    if (parameters && Object.keys(parameters).length > 0) {
-      endpoint = `/job/${encodedJobName}/buildWithParameters`;
-
-      // Convert parameters to form data
-      const formData = new URLSearchParams();
-      Object.entries(parameters).forEach(([key, value]) => {
-        formData.append(key, String(value));
-      });
-      postData = formData.toString();
-    }
-
-    // Jenkins build trigger returns 201 status code and Location header with queue URL
-    try {
-      // Get CSRF crumb if available
-      const crumb = await this.getCrumb();
-
-      // Prepare headers
-      const headers: any = {
-        ...this.getHeaders(),
-        'Content-Type': 'application/x-www-form-urlencoded',
-      };
-
-      // Add CSRF token if available (Jenkins expects it as a form parameter, not header)
-      if (crumb) {
-        // Add crumb to form data
-        if (postData) {
-          postData += `&${crumb.crumbRequestField}=${encodeURIComponent(crumb.crumb)}`;
-        } else {
-          postData = `${crumb.crumbRequestField}=${encodeURIComponent(crumb.crumb)}`;
-        }
-      }
-
-      const response = await firstValueFrom(
-        this.httpService.post(`${this.jenkinsUrl}${endpoint}`, postData, {
-          headers,
-          timeout: 30000,
-        })
-      );
-
-      // Extract queue ID from Location header if available
-      const location = response.headers?.location;
-      let queueId: number | undefined;
-
-      if (location) {
-        const queueMatch = location.match(/\/queue\/item\/(\d+)/);
-        if (queueMatch) {
-          queueId = parseInt(queueMatch[1]);
-        }
-      }
-
-      return {
-        message: `Build triggered successfully for job: ${jobName}`,
-        queueId,
-      };
-    } catch (error) {
-      if (error.response?.status === 201) {
-        // 201 is actually success for Jenkins build trigger
-        const location = error.response.headers?.location;
-        let queueId: number | undefined;
-
-        if (location) {
-          const queueMatch = location.match(/\/queue\/item\/(\d+)/);
-          if (queueMatch) {
-            queueId = parseInt(queueMatch[1]);
-          }
-        }
-
-        return {
-          message: `Build triggered successfully for job: ${jobName}`,
-          queueId,
-        };
-      }
-
-      // Handle specific error cases
-      console.error(`Failed to trigger build for ${jobName}:`, error.message);
-
-      if (error.response) {
-        const status = error.response.status;
-        const message = error.response.data?.message || error.message;
-
-        switch (status) {
-          case 401:
-            throw new HttpException(
-              'Jenkins authentication failed. Please check your credentials.',
-              HttpStatus.UNAUTHORIZED
-            );
-          case 403:
-            throw new HttpException(
-              `Jenkins access forbidden. This could be due to:\n1. Invalid credentials\n2. CSRF protection enabled (try enabling crumb issuer)\n3. Insufficient permissions for job: ${jobName}`,
-              HttpStatus.FORBIDDEN
-            );
-          case 404:
-            throw new HttpException(
-              `Job '${jobName}' not found in Jenkins`,
-              HttpStatus.NOT_FOUND
-            );
-          default:
-            throw new HttpException(
-              `Jenkins error (${status}): ${message}`,
-              HttpStatus.BAD_GATEWAY
-            );
-        }
-      }
-
-      throw new HttpException(
-        'Unable to connect to Jenkins server',
-        HttpStatus.SERVICE_UNAVAILABLE
-      );
     }
   }
 
@@ -660,6 +357,323 @@ export class JenkinsService {
       return `${minutes}m ${seconds % 60}s`;
     } else {
       return `${seconds}s`;
+    }
+  }
+
+  private getHeaders(_includeCrumb: boolean = false) {
+    const headers: any = {
+      'Content-Type': 'application/json',
+    };
+
+    if (this.jenkinsAuth) {
+      headers['Authorization'] = this.jenkinsAuth;
+    }
+
+    return headers;
+  }
+
+  private async getCrumb(): Promise<{
+    crumb: string;
+    crumbRequestField: string;
+  } | null> {
+    try {
+      const crumbData = await this.makeRequest('/crumbIssuer/api/json', 'GET');
+      console.log(
+        `Got Jenkins crumb: ${crumbData.crumbRequestField} = ${crumbData.crumb}`
+      );
+      return {
+        crumb: crumbData.crumb,
+        crumbRequestField: crumbData.crumbRequestField,
+      };
+    } catch (error) {
+      console.log(
+        'CSRF crumb not available, continuing without it:',
+        error.message
+      );
+      return null;
+    }
+  }
+
+  private async triggerBuildAlternative(
+    jobName: string,
+    parameters?: Record<string, any>
+  ): Promise<{ message: string; queueId?: number }> {
+    const encodedJobName = encodeURIComponent(jobName);
+
+    try {
+      // Try method 1: Direct API call with token (often bypasses CSRF)
+      const endpoint =
+        parameters && Object.keys(parameters).length > 0
+          ? `/job/${encodedJobName}/buildWithParameters`
+          : `/job/${encodedJobName}/build`;
+
+      const url = `${this.jenkinsUrl}${endpoint}`;
+
+      // Prepare form data if needed
+      let formData = '';
+      if (parameters && Object.keys(parameters).length > 0) {
+        formData = new URLSearchParams(parameters).toString();
+      }
+
+      const config = {
+        method: 'POST' as const,
+        url,
+        headers: this.getHeaders(),
+        timeout: 30000,
+        data: formData,
+      };
+
+      const response = await firstValueFrom(this.httpService.request(config));
+
+      return {
+        message: `Build triggered successfully for job: ${jobName}`,
+      };
+    } catch (error) {
+      console.log('Alternative method failed, trying original approach');
+      throw error;
+    }
+  }
+
+  private async makeRequest(
+    endpoint: string,
+    method: 'GET' | 'POST' = 'GET',
+    data?: any
+  ) {
+    try {
+      const url = `${this.jenkinsUrl}${endpoint}`;
+      const headers = this.getHeaders();
+
+      // For POST requests, try to add CSRF crumb token
+      if (method === 'POST') {
+        const crumb = await this.getCrumb();
+        if (crumb) {
+          headers[crumb.crumbRequestField] = crumb.crumb;
+        }
+      }
+
+      const config = {
+        method,
+        url,
+        headers,
+        timeout: 30000, // 30 second timeout
+        data,
+      };
+
+      const response = await firstValueFrom(this.httpService.request(config));
+      return response.data;
+    } catch (error) {
+      console.error(`Jenkins API Error (${endpoint}):`, error.message);
+
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message || error.message;
+
+        switch (status) {
+          case 401:
+            throw new HttpException(
+              'Jenkins authentication failed',
+              HttpStatus.UNAUTHORIZED
+            );
+          case 403:
+            throw new HttpException(
+              'Jenkins access forbidden',
+              HttpStatus.FORBIDDEN
+            );
+          case 404:
+            throw new HttpException(
+              'Jenkins resource not found',
+              HttpStatus.NOT_FOUND
+            );
+          case 500:
+            throw new HttpException(
+              'Jenkins server error',
+              HttpStatus.INTERNAL_SERVER_ERROR
+            );
+          default:
+            throw new HttpException(
+              `Jenkins error: ${message}`,
+              HttpStatus.BAD_GATEWAY
+            );
+        }
+      }
+
+      throw new HttpException(
+        'Unable to connect to Jenkins server',
+        HttpStatus.SERVICE_UNAVAILABLE
+      );
+    }
+  }
+
+  private async triggerBuildSimple(
+    jobName: string,
+    parameters?: Record<string, any>
+  ): Promise<{ message: string; queueId?: number }> {
+    const encodedJobName = encodeURIComponent(jobName);
+    const endpoint =
+      parameters && Object.keys(parameters).length > 0
+        ? `/job/${encodedJobName}/buildWithParameters`
+        : `/job/${encodedJobName}/build`;
+
+    let formData = '';
+    if (parameters && Object.keys(parameters).length > 0) {
+      formData = new URLSearchParams(parameters).toString();
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.jenkinsUrl}${endpoint}`, formData, {
+          headers: {
+            ...this.getHeaders(),
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          timeout: 30000,
+          validateStatus: (status) => status < 400,
+        })
+      );
+
+      return {
+        message: `Build triggered successfully for job: ${jobName}`,
+        queueId: this.extractQueueId(response.headers?.location),
+      };
+    } catch (error) {
+      if (error.response?.status === 201) {
+        // 201 is success for Jenkins
+        return {
+          message: `Build triggered successfully for job: ${jobName}`,
+          queueId: this.extractQueueId(error.response.headers?.location),
+        };
+      }
+      throw error;
+    }
+  }
+
+  private extractQueueId(location?: string): number | undefined {
+    if (location) {
+      const queueMatch = location.match(/\/queue\/item\/(\d+)/);
+      if (queueMatch) {
+        return parseInt(queueMatch[1]);
+      }
+    }
+    return undefined;
+  }
+
+  private async triggerBuildWithCSRF(
+    jobName: string,
+    parameters?: Record<string, any>
+  ): Promise<{ message: string; queueId?: number }> {
+    const encodedJobName = encodeURIComponent(jobName);
+    let endpoint = `/job/${encodedJobName}/build`;
+
+    let postData = null;
+
+    if (parameters && Object.keys(parameters).length > 0) {
+      endpoint = `/job/${encodedJobName}/buildWithParameters`;
+
+      // Convert parameters to form data
+      const formData = new URLSearchParams();
+      Object.entries(parameters).forEach(([key, value]) => {
+        formData.append(key, String(value));
+      });
+      postData = formData.toString();
+    }
+
+    // Jenkins build trigger returns 201 status code and Location header with queue URL
+    try {
+      // Get CSRF crumb if available
+      const crumb = await this.getCrumb();
+
+      // Prepare headers
+      const headers: any = {
+        ...this.getHeaders(),
+        'Content-Type': 'application/x-www-form-urlencoded',
+      };
+
+      // Add CSRF token if available (Jenkins expects it as a form parameter, not header)
+      if (crumb) {
+        // Add crumb to form data
+        if (postData) {
+          postData += `&${crumb.crumbRequestField}=${encodeURIComponent(crumb.crumb)}`;
+        } else {
+          postData = `${crumb.crumbRequestField}=${encodeURIComponent(crumb.crumb)}`;
+        }
+      }
+
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.jenkinsUrl}${endpoint}`, postData, {
+          headers,
+          timeout: 30000,
+        })
+      );
+
+      // Extract queue ID from Location header if available
+      const location = response.headers?.location;
+      let queueId: number | undefined;
+
+      if (location) {
+        const queueMatch = location.match(/\/queue\/item\/(\d+)/);
+        if (queueMatch) {
+          queueId = parseInt(queueMatch[1]);
+        }
+      }
+
+      return {
+        message: `Build triggered successfully for job: ${jobName}`,
+        queueId,
+      };
+    } catch (error) {
+      if (error.response?.status === 201) {
+        // 201 is actually success for Jenkins build trigger
+        const location = error.response.headers?.location;
+        let queueId: number | undefined;
+
+        if (location) {
+          const queueMatch = location.match(/\/queue\/item\/(\d+)/);
+          if (queueMatch) {
+            queueId = parseInt(queueMatch[1]);
+          }
+        }
+
+        return {
+          message: `Build triggered successfully for job: ${jobName}`,
+          queueId,
+        };
+      }
+
+      // Handle specific error cases
+      console.error(`Failed to trigger build for ${jobName}:`, error.message);
+
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message || error.message;
+
+        switch (status) {
+          case 401:
+            throw new HttpException(
+              'Jenkins authentication failed. Please check your credentials.',
+              HttpStatus.UNAUTHORIZED
+            );
+          case 403:
+            throw new HttpException(
+              `Jenkins access forbidden. This could be due to:\n1. Invalid credentials\n2. CSRF protection enabled (try enabling crumb issuer)\n3. Insufficient permissions for job: ${jobName}`,
+              HttpStatus.FORBIDDEN
+            );
+          case 404:
+            throw new HttpException(
+              `Job '${jobName}' not found in Jenkins`,
+              HttpStatus.NOT_FOUND
+            );
+          default:
+            throw new HttpException(
+              `Jenkins error (${status}): ${message}`,
+              HttpStatus.BAD_GATEWAY
+            );
+        }
+      }
+
+      throw new HttpException(
+        'Unable to connect to Jenkins server',
+        HttpStatus.SERVICE_UNAVAILABLE
+      );
     }
   }
 }
