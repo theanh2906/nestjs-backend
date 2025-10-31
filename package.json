@@ -130,6 +130,7 @@
   },
   "lint-staged": {
     "*.{js,ts,json,md,html,scss}": [
+      "node normalize-line-endings.js",
       "prettier --write --config ./.prettierrc"
     ]
   }
