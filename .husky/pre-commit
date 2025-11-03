@@ -1,2 +1,1 @@
-node normalize-line-endings.js
 npx lint-staged
