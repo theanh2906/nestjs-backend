@@ -16,12 +16,18 @@ export class SseController {
     return this.sseService.getEvent(SseEvent.MonitorReport);
   }
 
-  @Sse('build-log')
+  @Sse(SseEvent.BuildLog)
   streamBuildLog(
     @Query('jobName') jobName: string,
     @Query('buildNumber') buildNumber: string
   ) {
     console.log(`Starting build log stream for ${jobName} #${buildNumber}`);
     return this.sseService.streamBuildLog(jobName, parseInt(buildNumber));
+  }
+
+  @Sse(SseEvent.JenkinsMonitoring)
+  streamJenkinsMonitoring() {
+    console.log('Starting Jenkins monitoring stream');
+    return this.sseService.streamJenkinsMonitoring();
   }
 }

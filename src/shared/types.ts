@@ -10,4 +10,6 @@ export type RabbitMessage = {
 
 export enum SseEvent {
   MonitorReport = 'monitor-report',
+  BuildLog = 'build-log',
+  JenkinsMonitoring = 'jenkins-monitoring',
 }
