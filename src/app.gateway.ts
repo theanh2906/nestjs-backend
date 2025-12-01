@@ -10,7 +10,12 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { FileService, FirebaseService, SystemService } from './services';
+import {
+  FileService,
+  FirebaseService,
+  LiveShareService,
+  SystemService,
+} from './services';
 
 @WebSocketGateway({
   cors: {
@@ -28,7 +33,8 @@ export class AppGateway
   constructor(
     private readonly systemService: SystemService,
     private readonly fileService: FileService,
-    private readonly firebaseService: FirebaseService
+    private readonly firebaseService: FirebaseService,
+    private readonly liveShareService: LiveShareService
   ) {}
 
   afterInit(): void {
@@ -114,6 +120,47 @@ export class AppGateway
   @SubscribeMessage('file-sync')
   async handleFileSync() {
     // return this.firebaseService.handleFileSync();
+  }
+
+  // Live Share Room Events
+  @SubscribeMessage('join-room')
+  handleJoinRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() roomId: string
+  ) {
+    client.join(roomId);
+    this.logger.log(`Client ${client.id} joined room ${roomId}`);
+    client.to(roomId).emit('user-joined', { userId: client.id });
+  }
+
+  @SubscribeMessage('leave-room')
+  handleLeaveRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() roomId: string
+  ) {
+    client.leave(roomId);
+    this.logger.log(`Client ${client.id} left room ${roomId}`);
+    client.to(roomId).emit('user-left', { userId: client.id });
+  }
+
+  // Broadcast new message to all clients in the room
+  broadcastMessage(roomId: string, message: any) {
+    this.server.to(roomId).emit('new-message', message);
+  }
+
+  // Broadcast new file to all clients in the room
+  broadcastFile(roomId: string, file: any) {
+    this.server.to(roomId).emit('new-file', file);
+  }
+
+  // Broadcast room deletion to all clients in the room
+  broadcastRoomDeleted(roomId: string) {
+    this.server.to(roomId).emit('room-deleted', { roomId });
+  }
+
+  // Broadcast history cleared to all clients in the room
+  broadcastHistoryCleared(roomId: string) {
+    this.server.to(roomId).emit('history-cleared', { roomId });
   }
 
   sendMessage(event: string, data: any) {
