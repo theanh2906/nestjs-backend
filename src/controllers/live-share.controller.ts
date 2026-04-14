@@ -14,6 +14,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { LiveShareService } from '../services/live-share.service';
 import { AppGateway } from '../app.gateway';
 
+/**
+ * Controller for handling live sharing rooms.
+ */
 @Controller('/api/live-share')
 export class LiveShareController {
   constructor(
@@ -22,7 +25,8 @@ export class LiveShareController {
   ) {}
 
   /**
-   * Create a new room
+   * Creates a new room.
+   * @returns The newly created room.
    */
   @Post('rooms')
   async createRoom() {
@@ -30,7 +34,8 @@ export class LiveShareController {
   }
 
   /**
-   * Get or create admin room (for logged in users)
+   * Gets or creates an admin room for logged-in users.
+   * @returns The admin room.
    */
   @Post('rooms/admin')
   async getOrCreateAdminRoom() {
@@ -38,7 +43,9 @@ export class LiveShareController {
   }
 
   /**
-   * Get room data
+   * Gets the data for a specific room.
+   * @param roomId The ID of the room.
+   * @returns The room data.
    */
   @Get('rooms/:roomId')
   async getRoom(@Param('roomId') roomId: string) {
@@ -50,7 +57,9 @@ export class LiveShareController {
   }
 
   /**
-   * Get room content (messages + files sorted by timestamp)
+   * Gets the content of a room, including messages and files, sorted by timestamp.
+   * @param roomId The ID of the room.
+   * @returns The content of the room.
    */
   @Get('rooms/:roomId/content')
   async getRoomContent(@Param('roomId') roomId: string) {
@@ -58,7 +67,10 @@ export class LiveShareController {
   }
 
   /**
-   * Add a text message to room
+   * Adds a text message to a room.
+   * @param roomId The ID of the room.
+   * @param content The content of the message.
+   * @returns The newly created message.
    */
   @Post('rooms/:roomId/messages')
   async addMessage(
@@ -83,7 +95,10 @@ export class LiveShareController {
   }
 
   /**
-   * Upload a file to room
+   * Uploads a file to a room.
+   * @param roomId The ID of the room.
+   * @param file The file to upload.
+   * @returns The newly uploaded file.
    */
   @Post('rooms/:roomId/files')
   @UseInterceptors(FileInterceptor('file'))
@@ -106,7 +121,9 @@ export class LiveShareController {
   }
 
   /**
-   * Delete room and all its files
+   * Deletes a room and all its files.
+   * @param roomId The ID of the room to delete.
+   * @returns A success message.
    */
   @Delete('rooms/:roomId')
   async deleteRoom(@Param('roomId') roomId: string) {
@@ -117,7 +134,9 @@ export class LiveShareController {
   }
 
   /**
-   * Clear history (messages and files) for admin room
+   * Clears the history (messages and files) for a room.
+   * @param roomId The ID of the room to clear.
+   * @returns A success message.
    */
   @Post('rooms/:roomId/clear-history')
   async clearHistory(@Param('roomId') roomId: string) {

@@ -10,3 +10,5 @@ export * from './kafka-monitor.controller';
 export * from './jenkins.controller';
 export * from './messages.controller';
 export * from './live-share.controller';
+export * from './mongodb.controller';
+export * from './scheduler.controller';

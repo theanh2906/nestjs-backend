@@ -13,3 +13,6 @@ export * from './kafka-monitor.service';
 export * from './sse.service';
 export * from './jenkins.service';
 export * from './live-share.service';
+export * from './mongodb.service';
+export * from './migration.service';
+export * from './scheduler-manager.service';

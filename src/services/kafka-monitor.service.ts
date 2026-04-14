@@ -109,6 +109,9 @@ export interface KafkaMonitorReport {
   }>;
 }
 
+/**
+ * Service for monitoring a Kafka cluster.
+ */
 @Injectable()
 export class KafkaMonitorService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(KafkaMonitorService.name);
@@ -128,6 +131,9 @@ export class KafkaMonitorService implements OnModuleInit, OnModuleDestroy {
     @Inject('KAFKA_CONFIG') private readonly kafkaConfig: any
   ) {}
 
+  /**
+   * Initializes the Kafka monitoring service.
+   */
   async onModuleInit() {
     if (!this.kafkaConfig.KAFKA_ENABLED) {
       this.logger.log('Kafka monitoring disabled - KAFKA_ENABLED is false');
@@ -141,11 +147,18 @@ export class KafkaMonitorService implements OnModuleInit, OnModuleDestroy {
     setTimeout(() => this.performMonitoringCheck(), 2000);
   }
 
+  /**
+   * Stops the Kafka monitoring service.
+   */
   async onModuleDestroy() {
     this.isMonitoring = false;
     this.logger.log('Kafka monitoring service stopped');
   }
 
+  /**
+   * Performs a monitoring check of the Kafka cluster.
+   * This method is called by a cron job every 30 seconds.
+   */
   @Cron(CronExpression.EVERY_30_SECONDS)
   async performMonitoringCheck() {
     if (!this.isMonitoring || !this.kafkaConfig.KAFKA_ENABLED) {
@@ -583,7 +596,10 @@ export class KafkaMonitorService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  // Methods to record performance metrics
+  /**
+   * Records the time it took to produce a message.
+   * @param timeMs The time in milliseconds.
+   */
   recordProduceTime(timeMs: number) {
     this.performanceMetrics.produceTimeSamples.push(timeMs);
     if (this.performanceMetrics.produceTimeSamples.length > 100) {
@@ -591,6 +607,10 @@ export class KafkaMonitorService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * Records the time it took to consume a message.
+   * @param timeMs The time in milliseconds.
+   */
   recordConsumeTime(timeMs: number) {
     this.performanceMetrics.consumeTimeSamples.push(timeMs);
     if (this.performanceMetrics.consumeTimeSamples.length > 100) {
@@ -598,16 +618,26 @@ export class KafkaMonitorService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * Records a message that was produced or consumed.
+   * @param sizeBytes The size of the message in bytes.
+   */
   recordMessage(sizeBytes: number) {
     this.performanceMetrics.messageCount++;
     this.performanceMetrics.byteCount += sizeBytes;
   }
 
+  /**
+   * Records an error that occurred.
+   */
   recordError() {
     this.performanceMetrics.errorCount++;
   }
 
-  // Manual trigger for testing
+  /**
+   * Manually triggers a monitoring report.
+   * @returns The monitoring report.
+   */
   async triggerMonitoringReport(): Promise<KafkaMonitorReport> {
     this.logger.log('Manually triggering Kafka monitoring report...');
     return await this.generateMonitoringReport();

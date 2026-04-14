@@ -13,6 +13,9 @@ import {
 import { SseEvent } from '../shared/types';
 import { JenkinsService } from './jenkins.service';
 
+/**
+ * Service for handling Server-Sent Events (SSE).
+ */
 @Injectable()
 export class SseService {
   @Inject() private readonly jenkinsService: JenkinsService;
@@ -26,6 +29,11 @@ export class SseService {
   // Jenkins monitoring refresh interval (10 seconds)
   private readonly JENKINS_REFRESH_INTERVAL = 10000;
 
+  /**
+   * Gets an observable for a specific SSE event.
+   * @param eventName The name of the event.
+   * @returns An observable for the event.
+   */
   getEvent(eventName: SseEvent): Observable<any> {
     if (!this.eventSubjects[eventName]) {
       this.eventSubjects[eventName] = new Subject<any>();
@@ -33,6 +41,11 @@ export class SseService {
     return this.eventSubjects[eventName].asObservable();
   }
 
+  /**
+   * Emits an SSE event.
+   * @param eventName The name of the event.
+   * @param data The data to emit.
+   */
   emit(eventName: SseEvent, data: any): void {
     if (this.eventSubjects[eventName]) {
       this.eventSubjects[eventName].next(data);
@@ -40,8 +53,9 @@ export class SseService {
   }
 
   /**
-   * Stream Jenkins monitoring data using SSE
-   * This includes jobs, status, health, and queue information
+   * Streams Jenkins monitoring data using SSE.
+   * This includes jobs, status, health, and queue information.
+   * @returns An observable that emits Jenkins monitoring data.
    */
   streamJenkinsMonitoring(): Observable<any> {
     return interval(this.JENKINS_REFRESH_INTERVAL).pipe(
@@ -71,7 +85,8 @@ export class SseService {
                 ? {
                     totalItems: queue.value.items?.length || 0,
                     stuckItems:
-                      queue.value.items?.filter((item) => item.stuck).length || 0,
+                      queue.value.items?.filter((item) => item.stuck).length ||
+                      0,
                   }
                 : { totalItems: 0, stuckItems: 0 },
             system:
@@ -164,7 +179,10 @@ export class SseService {
   }
 
   /**
-   * Stream build log using SSE
+   * Streams the build log for a specific Jenkins job.
+   * @param jobName The name of the Jenkins job.
+   * @param buildNumber The build number of the Jenkins job.
+   * @returns An observable that emits build log data.
    */
   streamBuildLog(jobName: string, buildNumber: number): Observable<any> {
     let nextStart = 0;

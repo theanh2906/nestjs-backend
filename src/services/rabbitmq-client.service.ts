@@ -31,11 +31,12 @@ export class RabbitMQClientService {
   // -------------------- Stream Handlers --------------------
 
   /**
-   * Subscribes to a RabbitMQ stream using the specified protocol
-   * @param stream Stream name
-   * @param fromFirst Whether to start from the first message
-   * @param protocol Protocol to use (AMQP or STOMP)
-   * @param callback Callback function for received messages
+   * Subscribes to a RabbitMQ stream using the specified protocol.
+   * @param stream The name of the stream.
+   * @param fromFirst Whether to start from the first message.
+   * @param protocol The protocol to use (AMQP or STOMP).
+   * @param callback A callback function for received messages.
+   * @returns An Observable or a StompSubscription.
    */
   async subscribeToStream(
     stream: string,
@@ -51,10 +52,10 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Sends a message to a RabbitMQ stream using the specified protocol
-   * @param stream Stream name
-   * @param message Message to send
-   * @param protocol Protocol to use (AMQP or STOMP)
+   * Sends a message to a RabbitMQ stream using the specified protocol.
+   * @param stream The name of the stream.
+   * @param message The message to send.
+   * @param protocol The protocol to use (AMQP or STOMP).
    */
   async sendToStream(
     stream: string,
@@ -69,11 +70,11 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Subscribes to a RabbitMQ stream using AMQP protocol
-   * @param stream Stream name
-   * @param fromFirst Whether to start from the first message
-   * @param callback Callback function for received messages
-   * @returns Observable that emits received messages
+   * Subscribes to a RabbitMQ stream using the AMQP protocol.
+   * @param stream The name of the stream.
+   * @param fromFirst Whether to start from the first message.
+   * @param callback A callback function for received messages.
+   * @returns An Observable that emits received messages.
    */
   amqpSubscribeToStream(
     stream: string,
@@ -104,9 +105,9 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Sends a message to a RabbitMQ stream using AMQP protocol
-   * @param stream Stream name
-   * @param message Message to send
+   * Sends a message to a RabbitMQ stream using the AMQP protocol.
+   * @param stream The name of the stream.
+   * @param message The message to send.
    */
   async amqpSendToStream(stream: string, message: any): Promise<void> {
     if (!this.amqpChannel) {
@@ -137,9 +138,10 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Subscribes to a RabbitMQ queue using the specified protocol
-   * @param queue Queue name
-   * @param protocol Protocol to use (AMQP or STOMP)
+   * Subscribes to a RabbitMQ queue using the specified protocol.
+   * @param queue The name of the queue.
+   * @param protocol The protocol to use (AMQP or STOMP).
+   * @returns An Observable that emits received messages.
    */
   subscribeToQueue(
     queue: string,
@@ -153,10 +155,10 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Sends a message to a RabbitMQ queue using the specified protocol
-   * @param queue Queue name
-   * @param message Message to send
-   * @param protocol Protocol to use (AMQP or STOMP)
+   * Sends a message to a RabbitMQ queue using the specified protocol.
+   * @param queue The name of the queue.
+   * @param message The message to send.
+   * @param protocol The protocol to use (AMQP or STOMP).
    */
   async sendToQueue(
     queue: string,
@@ -171,10 +173,10 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Subscribes to a RabbitMQ queue using AMQP protocol
-   * @param queue Queue name
-   * @param callback Callback function for received messages
-   * @returns Observable that emits received messages
+   * Subscribes to a RabbitMQ queue using the AMQP protocol.
+   * @param queue The name of the queue.
+   * @param callback A callback function for received messages.
+   * @returns An Observable that emits received messages.
    */
   amqpSubscribeToQueue(
     queue: string,
@@ -201,9 +203,9 @@ export class RabbitMQClientService {
   // -------------------- Queue Handlers --------------------
 
   /**
-   * Sends a message to a RabbitMQ queue using AMQP protocol
-   * @param queue Queue name
-   * @param message Message to send
+   * Sends a message to a RabbitMQ queue using the AMQP protocol.
+   * @param queue The name of the queue.
+   * @param message The message to send.
    */
   async amqpSendToQueue(queue: string, message: any): Promise<void> {
     if (!this.amqpChannel) {
@@ -234,11 +236,12 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Subscribes to a RabbitMQ exchange using the specified protocol
-   * @param exchange Exchange name
-   * @param routingKey Routing key
-   * @param protocol Protocol to use (AMQP or STOMP)
-   * @param callback Callback function for received messages
+   * Subscribes to a RabbitMQ exchange using the specified protocol.
+   * @param exchange The name of the exchange.
+   * @param routingKey The routing key.
+   * @param protocol The protocol to use (AMQP or STOMP).
+   * @param callback A callback function for received messages.
+   * @returns An Observable or a StompSubscription.
    */
   async subscribeToExchange(
     exchange: string,
@@ -254,11 +257,11 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Sends a message to a RabbitMQ exchange using the specified protocol
-   * @param exchange Exchange name
-   * @param message Message to send
-   * @param routingKey Routing key
-   * @param protocol Protocol to use (AMQP or STOMP)
+   * Sends a message to a RabbitMQ exchange using the specified protocol.
+   * @param exchange The name of the exchange.
+   * @param message The message to send.
+   * @param routingKey The routing key.
+   * @param protocol The protocol to use (AMQP or STOMP).
    */
   async sendToExchange(
     exchange: string,
@@ -274,11 +277,11 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Subscribes to a RabbitMQ exchange using AMQP protocol
-   * @param exchange Exchange name
-   * @param routingKey Routing key
-   * @param callback Callback function for received messages
-   * @returns Observable that emits received messages
+   * Subscribes to a RabbitMQ exchange using the AMQP protocol.
+   * @param exchange The name of the exchange.
+   * @param routingKey The routing key.
+   * @param callback A callback function for received messages.
+   * @returns An Observable that emits received messages.
    */
   amqpSubscribeToExchange(
     exchange: string,
@@ -314,10 +317,10 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Sends a message to a RabbitMQ exchange using AMQP protocol
-   * @param exchange Exchange name
-   * @param message Message to send
-   * @param routingKey Routing key
+   * Sends a message to a RabbitMQ exchange using the AMQP protocol.
+   * @param exchange The name of the exchange.
+   * @param message The message to send.
+   * @param routingKey The routing key.
    */
   async amqpSendToExchange(
     exchange: string,
@@ -355,7 +358,7 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Initializes the STOMP client
+   * Initializes the STOMP client.
    */
   async initStomp(): Promise<void> {
     const stompUrl = this.RABBITMQ_CONFIG.RABBITMQ_STOMP_URL;
@@ -399,7 +402,8 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Initializes the AMQP client
+   * Initializes the AMQP client.
+   * @returns The AMQP channel.
    */
   async initAmqpClient(): Promise<Channel> {
     try {
@@ -442,7 +446,7 @@ export class RabbitMQClientService {
   // -------------------- Exchange Handlers --------------------
 
   /**
-   * Closes all connections
+   * Closes all connections.
    */
   async closeConnections(): Promise<void> {
     // Close STOMP connections
@@ -476,11 +480,11 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Subscribes to a RabbitMQ stream using STOMP protocol
-   * @param stream Stream name
-   * @param fromFirst Whether to start from the first message
-   * @param callback Callback function for received messages
-   * @returns StompSubscription
+   * Subscribes to a RabbitMQ stream using the STOMP protocol.
+   * @param stream The name of the stream.
+   * @param fromFirst Whether to start from the first message.
+   * @param callback A callback function for received messages.
+   * @returns A StompSubscription.
    */
   private stompSubscribeToStream(
     stream: string,
@@ -517,9 +521,9 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Sends a message to a RabbitMQ stream using STOMP protocol
-   * @param stream Stream name
-   * @param message Message to send
+   * Sends a message to a RabbitMQ stream using the STOMP protocol.
+   * @param stream The name of the stream.
+   * @param message The message to send.
    */
   private async stompSendToStream(stream: string, message: any): Promise<void> {
     if (!this.stompClient || !this.stompClient.connected) {
@@ -538,11 +542,11 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Sets up an AMQP stream subscription
-   * @param stream Stream name
-   * @param fromFirst Whether to start from the first message
-   * @param observer Observable observer
-   * @param callback Optional callback function
+   * Sets up an AMQP stream subscription.
+   * @param stream The name of the stream.
+   * @param fromFirst Whether to start from the first message.
+   * @param observer The Observable observer.
+   * @param callback An optional callback function.
    */
   private setupAmqpStreamSubscription(
     stream: string,
@@ -582,10 +586,10 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Subscribes to a RabbitMQ queue using STOMP protocol
-   * @param queue Queue name
-   * @param callback Callback function for received messages
-   * @returns StompSubscription
+   * Subscribes to a RabbitMQ queue using the STOMP protocol.
+   * @param queue The name of the queue.
+   * @param callback A callback function for received messages.
+   * @returns An Observable that emits received messages.
    */
   private stompSubscribeToQueue(
     queue: string,
@@ -619,9 +623,9 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Sends a message to a RabbitMQ queue using STOMP protocol
-   * @param queue Queue name
-   * @param message Message to send
+   * Sends a message to a RabbitMQ queue using the STOMP protocol.
+   * @param queue The name of the queue.
+   * @param message The message to send.
    */
   private async stompSendToQueue(queue: string, message: any): Promise<void> {
     if (!this.stompClient || !this.stompClient.connected) {
@@ -640,10 +644,10 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Sets up an AMQP queue subscription
-   * @param queue Queue name
-   * @param observer Observable observer
-   * @param callback Optional callback function
+   * Sets up an AMQP queue subscription.
+   * @param queue The name of the queue.
+   * @param observer The Observable observer.
+   * @param callback An optional callback function.
    */
   private setupAmqpQueueSubscription(
     queue: string,
@@ -689,11 +693,11 @@ export class RabbitMQClientService {
   // -------------------- Connection Management --------------------
 
   /**
-   * Subscribes to a RabbitMQ exchange using STOMP protocol
-   * @param exchange Exchange name
-   * @param routingKey Routing key
-   * @param callback Callback function for received messages
-   * @returns StompSubscription
+   * Subscribes to a RabbitMQ exchange using the STOMP protocol.
+   * @param exchange The name of the exchange.
+   * @param routingKey The routing key.
+   * @param callback A callback function for received messages.
+   * @returns A StompSubscription.
    */
   private stompSubscribeToExchange(
     exchange: string,
@@ -731,10 +735,10 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Sends a message to a RabbitMQ exchange using STOMP protocol
-   * @param exchange Exchange name
-   * @param message Message to send
-   * @param routingKey Routing key
+   * Sends a message to a RabbitMQ exchange using the STOMP protocol.
+   * @param exchange The name of the exchange.
+   * @param message The message to send.
+   * @param routingKey The routing key.
    */
   private async stompSendToExchange(
     exchange: string,
@@ -760,11 +764,11 @@ export class RabbitMQClientService {
   }
 
   /**
-   * Sets up an AMQP exchange subscription
-   * @param exchange Exchange name
-   * @param routingKey Routing key
-   * @param observer Observable observer
-   * @param callback Optional callback function
+   * Sets up an AMQP exchange subscription.
+   * @param exchange The name of the exchange.
+   * @param routingKey The routing key.
+   * @param observer The Observable observer.
+   * @param callback An optional callback function.
    */
   private setupAmqpExchangeSubscription(
     exchange: string,

@@ -35,6 +35,9 @@ import { BaseController } from '../shared/base.controller';
 import { FileTypes } from '../shared/constants';
 import { UtilsService } from '../shared/utils.service';
 
+/**
+ * Controller for handling file uploads, downloads, and management.
+ */
 @Controller({
   path: '/api/files',
 })
@@ -58,6 +61,10 @@ export class FilesController extends BaseController {
     this.bucket = firebaseApp.storage().bucket();
   }
 
+  /**
+   * Gets information about all files in the upload folder.
+   * @returns An array of file information objects.
+   */
   @Get()
   @SkipThrottle()
   getAllFilesInfo() {
@@ -82,12 +89,21 @@ export class FilesController extends BaseController {
     }
   }
 
+  /**
+   * Gets information about all files in Firebase Storage.
+   * @returns A list of files in Firebase Storage.
+   */
   @Get('/firebase')
   @SkipThrottle()
   async getAllFilesInStorage() {
     return await this.firebaseService.getAllFiles();
   }
 
+  /**
+   * Creates a folder in Firebase Storage.
+   * @param folderName The name of the folder to create.
+   * @returns A success message or an error.
+   */
   @Post('/firebase/folder')
   async createFolder(@Body('folderName') folderName: string) {
     try {
@@ -98,6 +114,11 @@ export class FilesController extends BaseController {
     }
   }
 
+  /**
+   * Deletes files from Firebase Storage.
+   * @param fileNames The names of the files to delete.
+   * @returns A success message or an error.
+   */
   @Delete('/firebase')
   async deleteFiles(@Body() fileNames: string[]) {
     try {
@@ -108,6 +129,11 @@ export class FilesController extends BaseController {
     }
   }
 
+  /**
+   * Downloads a file from the local file system.
+   * @param fileName The name of the file to download.
+   * @returns A streamable file.
+   */
   @Get(':fileName')
   downloadFile(@Param('fileName') fileName: string) {
     const file = fs.createReadStream(
@@ -120,6 +146,12 @@ export class FilesController extends BaseController {
     });
   }
 
+  /**
+   * Downloads a file from Firebase Storage.
+   * @param fileName The name of the file to download.
+   * @param preview Whether to preview the file or download it.
+   * @returns A streamable file.
+   */
   @Get('/firebase/:fileName')
   async downloadFileFromStorage(
     @Param('fileName') fileName: string,
@@ -155,6 +187,11 @@ export class FilesController extends BaseController {
       );
     }
   }
+
+  /**
+   * Deletes a file from the local file system.
+   * @param fileNames The names of the files to delete.
+   */
   @Delete()
   @HttpCode(HttpStatus.NO_CONTENT) // No content response for successful deletion
   async deleteFile(@Body() fileNames: string[]): Promise<void> {
@@ -168,6 +205,11 @@ export class FilesController extends BaseController {
     }
   }
 
+  /**
+   * Uploads files to the local file system.
+   * @param files The files to upload.
+   * @returns Information about the uploaded files.
+   */
   @Post()
   @UseInterceptors(
     FilesInterceptor('files', 20, {
@@ -189,6 +231,11 @@ export class FilesController extends BaseController {
     }));
   }
 
+  /**
+   * Uploads files to Firebase Storage.
+   * @param files The files to upload.
+   * @returns The URLs of the uploaded files.
+   */
   @Post('/firebase')
   @UseInterceptors(FilesInterceptor('files', 20))
   async uploadFilesToStorage(@UploadedFiles() files: Express.Multer.File[]) {
@@ -202,6 +249,11 @@ export class FilesController extends BaseController {
     return { urls: fileUrls };
   }
 
+  /**
+   * Compresses files and makes them available for download.
+   * @param files The files to compress.
+   * @returns A streamable zip file.
+   */
   @Post('/zip')
   @UseInterceptors(
     FileFieldsInterceptor([

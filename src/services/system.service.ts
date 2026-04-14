@@ -27,10 +27,17 @@ export interface SystemMonitoringInfo {
   };
 }
 
+/**
+ * Service for getting system information.
+ */
 @Injectable()
 export class SystemService {
   @Inject() private readonly utils: UtilsService;
 
+  /**
+   * Gets system monitoring information.
+   * @returns The system monitoring information.
+   */
   getMonitoringInfo = async () => ({
     device_name: os.hostname(),
     data: JSON.stringify({
@@ -53,6 +60,11 @@ export class SystemService {
     timestamp: Date.now(),
   });
 
+  /**
+   * Executes a command and returns the output.
+   * @param command The command to execute.
+   * @returns The output of the command.
+   */
   executeCommand = (command: string): Promise<string> =>
     new Promise((resolve, reject) => {
       exec(command, (error, stdout, stderr) => {

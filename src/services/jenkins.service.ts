@@ -82,6 +82,9 @@ export interface JenkinsQueue {
   }>;
 }
 
+/**
+ * Service for interacting with the Jenkins API.
+ */
 @Injectable()
 export class JenkinsService {
   private readonly jenkinsUrl: string;
@@ -104,7 +107,8 @@ export class JenkinsService {
   }
 
   /**
-   * Get all Jenkins jobs with basic information
+   * Gets all Jenkins jobs with basic information.
+   * @returns A list of Jenkins jobs.
    */
   async getJobs(): Promise<JenkinsJob[]> {
     const data = await this.makeRequest(
@@ -114,7 +118,9 @@ export class JenkinsService {
   }
 
   /**
-   * Get detailed information about a specific job
+   * Gets detailed information about a specific job.
+   * @param jobName The name of the job.
+   * @returns Detailed information about the job.
    */
   async getJobDetails(jobName: string): Promise<JenkinsJobDetails> {
     const encodedJobName = encodeURIComponent(jobName);
@@ -124,7 +130,10 @@ export class JenkinsService {
   }
 
   /**
-   * Get recent builds for a specific job
+   * Gets recent builds for a specific job.
+   * @param jobName The name of the job.
+   * @param limit The maximum number of builds to return.
+   * @returns A list of recent builds.
    */
   async getJobBuilds(
     jobName: string,
@@ -138,7 +147,10 @@ export class JenkinsService {
   }
 
   /**
-   * Trigger a build for a specific job
+   * Triggers a build for a specific job.
+   * @param jobName The name of the job.
+   * @param parameters The parameters for the build.
+   * @returns A message indicating the result of the trigger.
    */
   async triggerBuild(
     jobName: string,
@@ -159,21 +171,26 @@ export class JenkinsService {
   }
 
   /**
-   * Get Jenkins system information
+   * Gets Jenkins system information.
+   * @returns The Jenkins system information.
    */
   async getSystemInfo(): Promise<JenkinsSystemInfo> {
     return await this.makeRequest('/api/json');
   }
 
   /**
-   * Get Jenkins build queue
+   * Gets the Jenkins build queue.
+   * @returns The Jenkins build queue.
    */
   async getQueue(): Promise<JenkinsQueue> {
     return await this.makeRequest('/queue/api/json');
   }
 
   /**
-   * Get build console output
+   * Gets the console output for a specific build.
+   * @param jobName The name of the job.
+   * @param buildNumber The build number.
+   * @returns The console output of the build.
    */
   async getBuildConsoleOutput(
     jobName: string,
@@ -186,7 +203,11 @@ export class JenkinsService {
   }
 
   /**
-   * Get progressive console output for real-time viewing
+   * Gets the progressive console output for a build, for real-time viewing.
+   * @param jobName The name of the job.
+   * @param buildNumber The build number.
+   * @param start The starting position of the log.
+   * @returns The progressive console output.
    */
   async getProgressiveConsoleOutput(
     jobName: string,
@@ -225,7 +246,10 @@ export class JenkinsService {
   }
 
   /**
-   * Stop/cancel a running build
+   * Stops or cancels a running build.
+   * @param jobName The name of the job.
+   * @param buildNumber The build number.
+   * @returns A message indicating the result of the stop operation.
    */
   async stopBuild(
     jobName: string,
@@ -242,7 +266,8 @@ export class JenkinsService {
   }
 
   /**
-   * Check Jenkins server health
+   * Checks the health of the Jenkins server.
+   * @returns The health status of the Jenkins server.
    */
   async getHealthCheck(): Promise<{
     status: string;
@@ -271,7 +296,9 @@ export class JenkinsService {
   }
 
   /**
-   * Utility method to get job status color meaning
+   * Gets the meaning of a job status color.
+   * @param color The color of the job status.
+   * @returns Information about the job status.
    */
   getJobStatusInfo(color: string): {
     status: string;
@@ -342,7 +369,9 @@ export class JenkinsService {
   }
 
   /**
-   * Format duration from milliseconds to human readable format
+   * Formats a duration from milliseconds to a human-readable format.
+   * @param milliseconds The duration in milliseconds.
+   * @returns The formatted duration.
    */
   formatDuration(milliseconds: number): string {
     if (!milliseconds) return 'N/A';

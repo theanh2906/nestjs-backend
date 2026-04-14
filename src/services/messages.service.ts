@@ -33,7 +33,7 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
   @Inject() private readonly firebaseService: FirebaseService;
 
   /**
-   * Lifecycle hook: Initializes the RabbitMQ clients on module init.
+   * Initializes the RabbitMQ clients on module init.
    * You can choose which protocol to use (STOMP, AMQP, or both).
    */
   async onModuleInit() {
@@ -70,7 +70,7 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Lifecycle hook: Cleans up connections on module destroy.
+   * Cleans up connections on module destroy.
    */
   async onModuleDestroy() {
     this.logger.log('Cleaning up RabbitMQ connections');
@@ -92,9 +92,9 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Publishes a message to a STOMP destination.
-   * @param destination STOMP destination (e.g., /queue/your-queue)
-   * @param body Message body (string)
-   * @param headers Optional STOMP headers
+   * @param destination The STOMP destination (e.g., /queue/your-queue).
+   * @param body The message body.
+   * @param headers Optional STOMP headers.
    */
   publishStomp(destination: string, body: string, headers: any = {}) {
     if (!this.client || !this.client.connected) {
@@ -106,10 +106,10 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Subscribes to a STOMP destination.
-   * @param destination STOMP destination
-   * @param callback Callback for received messages
-   * @param headers Optional STOMP headers
-   * @returns StompSubscription
+   * @param destination The STOMP destination.
+   * @param callback The callback for received messages.
+   * @param headers Optional STOMP headers.
+   * @returns The StompSubscription object.
    */
   subscribeStomp(
     destination: string,
@@ -127,7 +127,7 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Unsubscribes from a STOMP destination.
-   * @param destination STOMP destination
+   * @param destination The STOMP destination.
    */
   unsubscribeStomp(destination: string) {
     const sub = this.stompSubscriptions.get(destination);
@@ -138,6 +138,12 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * Subscribes to a RabbitMQ stream.
+   * @param stream The name of the stream.
+   * @param fromFirst Whether to start from the first message.
+   * @returns The result of the subscription.
+   */
   subscribeToStream(stream: string, fromFirst: boolean = false) {
     if (!this.RABBITMQ_CONFIG.RABBITMQ_ENABLED) {
       return;
@@ -154,6 +160,11 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
+  /**
+   * Sends a message to a RabbitMQ stream.
+   * @param stream The name of the stream.
+   * @param message The message to send.
+   */
   async sendToStream(stream: string, message: any) {
     if (!this.RABBITMQ_CONFIG.RABBITMQ_ENABLED) {
       return;
@@ -165,6 +176,12 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * Sends a message to a RabbitMQ exchange.
+   * @param exchange The name of the exchange.
+   * @param message The message to send.
+   * @param routingKey The routing key.
+   */
   async sendToExchange(
     exchange: string,
     message: any,
@@ -189,13 +206,13 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Subscribes to a RabbitMQ stream queue using AMQP protocol.
-   * Sets a prefetch count which is required for stream queues in RabbitMQ.
+   * Subscribes to a RabbitMQ stream queue using the AMQP protocol.
+   * Sets a prefetch count, which is required for stream queues in RabbitMQ.
    * Without this setting, RabbitMQ will return a PRECONDITION_FAILED error.
    *
-   * @param stream The name of the stream queue to subscribe to
-   * @param fromFirst Whether to start consuming from the first message (true) or only new messages (false)
-   * @returns Observable that emits received messages
+   * @param stream The name of the stream queue to subscribe to.
+   * @param fromFirst Whether to start consuming from the first message (true) or only new messages (false).
+   * @returns An Observable that emits received messages.
    */
   amqpSubscribeStream(stream: string, fromFirst = false): Observable<any> {
     return new Observable((observer) => {
@@ -229,7 +246,7 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Initializes the STOMP client using configuration.
+   * Initializes the STOMP client using the configuration.
    */
   private initStomp() {
     const stompUrl = this.RABBITMQ_CONFIG.RABBITMQ_STOMP_URL;

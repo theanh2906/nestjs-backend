@@ -3,6 +3,9 @@ import { Client } from '@microsoft/microsoft-graph-client';
 import { PublicClientApplication, TokenCache } from '@azure/msal-node';
 import { UtilsService } from '../shared/utils.service';
 
+/**
+ * Service for interacting with Azure services.
+ */
 @Injectable()
 export class AzureService {
   msalClient: PublicClientApplication;
@@ -30,6 +33,10 @@ export class AzureService {
     this.codeVerifier = this.utils.generatePCKECode();
   }
 
+  /**
+   * Gets the authentication URL for Azure.
+   * @returns The authentication URL.
+   */
   async getAuthUrl() {
     const codeChallenge = this.utils.generatePCKECodeChallenge(
       this.codeVerifier
@@ -42,6 +49,11 @@ export class AzureService {
     });
   }
 
+  /**
+   * Gets an access token from an authorization code.
+   * @param authCode The authorization code.
+   * @returns The access token.
+   */
   async getToken(authCode: string) {
     const tokenResponse = await this.msalClient.acquireTokenByCode({
       code: authCode,
@@ -52,6 +64,11 @@ export class AzureService {
     return tokenResponse.accessToken;
   }
 
+  /**
+   * Gets events from the user's calendar.
+   * @param accessToken The access token.
+   * @returns The calendar events.
+   */
   async getEvents(accessToken: string) {
     const client = Client.init({
       authProvider: (done) => done(null, accessToken),
@@ -60,6 +77,11 @@ export class AzureService {
     return client.api('/me/events').get();
   }
 
+  /**
+   * Gets a silent access token.
+   * @param account The user's account.
+   * @returns The access token.
+   */
   async getSilentToken(account: any): Promise<string> {
     try {
       const result = await this.msalClient.acquireTokenSilent({
@@ -74,6 +96,11 @@ export class AzureService {
     }
   }
 
+  /**
+   * Gets the user's account from the token cache.
+   * @param tokenCache The token cache.
+   * @returns The user's account.
+   */
   async getAccount(tokenCache: TokenCache): Promise<any> {
     const accounts = await tokenCache.getAllAccounts();
     if (accounts.length > 0) {

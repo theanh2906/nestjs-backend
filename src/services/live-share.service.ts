@@ -25,6 +25,9 @@ export interface Room {
   files: RoomFile[];
 }
 
+/**
+ * Service for handling live sharing rooms.
+ */
 @Injectable()
 export class LiveShareService {
   private bucket: admin.storage.Storage;
@@ -34,7 +37,8 @@ export class LiveShareService {
   }
 
   /**
-   * Create a new room
+   * Creates a new room.
+   * @returns The ID of the newly created room.
    */
   async createRoom(): Promise<{ roomId: string }> {
     const roomId = uuidv4();
@@ -52,7 +56,8 @@ export class LiveShareService {
   }
 
   /**
-   * Get or create admin room (persistent room for logged in users)
+   * Gets or creates an admin room, which is a persistent room for logged-in users.
+   * @returns The ID of the admin room.
    */
   async getOrCreateAdminRoom(): Promise<{ roomId: string }> {
     const roomId = 'admin';
@@ -75,7 +80,9 @@ export class LiveShareService {
   }
 
   /**
-   * Get room data
+   * Gets the data for a specific room.
+   * @param roomId The ID of the room.
+   * @returns The room data, or null if the room doesn't exist.
    */
   async getRoom(roomId: string): Promise<Room | null> {
     try {
@@ -95,7 +102,10 @@ export class LiveShareService {
   }
 
   /**
-   * Add a text message to room
+   * Adds a text message to a room.
+   * @param roomId The ID of the room.
+   * @param content The content of the message.
+   * @returns The newly created message.
    */
   async addMessage(roomId: string, content: string): Promise<RoomMessage> {
     const room = await this.getRoom(roomId);
@@ -117,7 +127,10 @@ export class LiveShareService {
   }
 
   /**
-   * Upload a file to room
+   * Uploads a file to a room.
+   * @param roomId The ID of the room.
+   * @param file The file to upload.
+   * @returns The newly uploaded file.
    */
   async uploadFile(
     roomId: string,
@@ -163,7 +176,8 @@ export class LiveShareService {
   }
 
   /**
-   * Delete room and all its files
+   * Deletes a room and all its files.
+   * @param roomId The ID of the room to delete.
    */
   async deleteRoom(roomId: string): Promise<void> {
     const bucket = this.bucket.bucket();
@@ -176,7 +190,8 @@ export class LiveShareService {
   }
 
   /**
-   * Clear history (messages and files) for admin room
+   * Clears the history (messages and files) for a room.
+   * @param roomId The ID of the room to clear.
    */
   async clearHistory(roomId: string): Promise<void> {
     const room = await this.getRoom(roomId);
@@ -201,7 +216,9 @@ export class LiveShareService {
   }
 
   /**
-   * Save room metadata to Firebase Storage
+   * Saves the room metadata to Firebase Storage.
+   * @param roomId The ID of the room.
+   * @param room The room data to save.
    */
   private async saveRoomMetadata(roomId: string, room: Room): Promise<void> {
     const bucket = this.bucket.bucket();
@@ -215,7 +232,9 @@ export class LiveShareService {
   }
 
   /**
-   * Get room content (messages + files sorted by timestamp)
+   * Gets the content of a room, including messages and files, sorted by timestamp.
+   * @param roomId The ID of the room.
+   * @returns The content of the room.
    */
   async getRoomContent(roomId: string): Promise<(RoomMessage | RoomFile)[]> {
     const room = await this.getRoom(roomId);

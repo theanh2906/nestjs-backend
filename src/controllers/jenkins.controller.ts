@@ -18,6 +18,9 @@ export interface TriggerBuildDto {
   parameters?: Record<string, any>;
 }
 
+/**
+ * Controller for interacting with the Jenkins API.
+ */
 @Controller('/api/jenkins/')
 @UseGuards(RateLimitGuards)
 export class JenkinsController extends BaseController {
@@ -26,7 +29,8 @@ export class JenkinsController extends BaseController {
   }
 
   /**
-   * Get all Jenkins jobs
+   * Get all Jenkins jobs.
+   * @returns A list of all Jenkins jobs with their status.
    */
   @Get('jobs')
   async getJobs() {
@@ -63,7 +67,9 @@ export class JenkinsController extends BaseController {
   }
 
   /**
-   * Get detailed information about a specific job
+   * Get detailed information about a specific job.
+   * @param jobName The name of the Jenkins job.
+   * @returns Detailed information about the specified job.
    */
   @Get('jobs/:jobName')
   async getJobDetails(@Param('jobName') jobName: string) {
@@ -108,7 +114,10 @@ export class JenkinsController extends BaseController {
   }
 
   /**
-   * Get recent builds for a specific job
+   * Get recent builds for a specific job.
+   * @param jobName The name of the Jenkins job.
+   * @param limit The maximum number of builds to return.
+   * @returns A list of recent builds for the specified job.
    */
   @Get('jobs/:jobName/builds')
   async getJobBuilds(
@@ -141,7 +150,10 @@ export class JenkinsController extends BaseController {
   }
 
   /**
-   * Trigger a build for a specific job
+   * Trigger a build for a specific job.
+   * @param jobName The name of the Jenkins job.
+   * @param triggerBuildDto The parameters for the build.
+   * @returns The result of the build trigger.
    */
   @Post('jobs/:jobName/build')
   async triggerBuild(
@@ -164,7 +176,8 @@ export class JenkinsController extends BaseController {
   }
 
   /**
-   * Get Jenkins system information
+   * Get Jenkins system information.
+   * @returns Jenkins system information and summary statistics.
    */
   @Get('system/info')
   async getSystemInfo() {
@@ -193,7 +206,8 @@ export class JenkinsController extends BaseController {
   }
 
   /**
-   * Get Jenkins build queue
+   * Get the Jenkins build queue.
+   * @returns The Jenkins build queue with formatted timestamps and a summary.
    */
   @Get('queue')
   async getQueue() {
@@ -227,7 +241,10 @@ export class JenkinsController extends BaseController {
   }
 
   /**
-   * Get build console output
+   * Get the console output for a specific build.
+   * @param jobName The name of the Jenkins job.
+   * @param buildNumber The build number.
+   * @returns The console output for the specified build.
    */
   @Get('jobs/:jobName/builds/:buildNumber/console')
   async getBuildConsoleOutput(
@@ -254,7 +271,11 @@ export class JenkinsController extends BaseController {
   }
 
   /**
-   * Get progressive console output for real-time viewing
+   * Get the progressive console output for a specific build.
+   * @param jobName The name of the Jenkins job.
+   * @param buildNumber The build number.
+   * @param start The starting offset for the console output.
+   * @returns The progressive console output for the specified build.
    */
   @Get('jobs/:jobName/builds/:buildNumber/progressive-console')
   async getProgressiveConsoleOutput(
@@ -284,7 +305,10 @@ export class JenkinsController extends BaseController {
   }
 
   /**
-   * Stop a running build
+   * Stop a running build.
+   * @param jobName The name of the Jenkins job.
+   * @param buildNumber The build number.
+   * @returns The result of the stop operation.
    */
   @Post('jobs/:jobName/builds/:buildNumber/stop')
   async stopBuild(
@@ -307,7 +331,8 @@ export class JenkinsController extends BaseController {
   }
 
   /**
-   * Get Jenkins health check
+   * Get the health status of the Jenkins server.
+   * @returns The health status of the Jenkins server.
    */
   @Get('health')
   async getHealthCheck() {
@@ -324,7 +349,8 @@ export class JenkinsController extends BaseController {
   }
 
   /**
-   * Get Jenkins server status summary
+   * Get a summary of the Jenkins server status.
+   * @returns A summary of the Jenkins server status.
    */
   @Get('status')
   async getStatus() {

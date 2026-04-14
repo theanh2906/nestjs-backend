@@ -10,6 +10,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import multer from 'multer';
 import { TerminusModule } from '@nestjs/terminus';
 import { ScheduleModule } from '@nestjs/schedule';
+import { MongooseModule } from '@nestjs/mongoose';
 import * as services from './services';
 import * as controllers from './controllers';
 import * as admin from 'firebase-admin';
@@ -32,6 +33,20 @@ const SCOPES = [MESSAGING_SCOPE];
       envFilePath: `src/environments/${process.env.NODE_ENV}.env`,
       isGlobal: true,
     }),
+    MongooseModule.forRoot(
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/nestjs-backend',
+      {
+        connectionFactory: (connection) => {
+          connection.on('connected', () => {
+            console.log('MongoDB connected successfully');
+          });
+          connection.on('error', (error) => {
+            console.error('MongoDB connection error:', error);
+          });
+          return connection;
+        },
+      }
+    ),
     ThrottlerModule.forRoot([
       {
         ttl: 60000,

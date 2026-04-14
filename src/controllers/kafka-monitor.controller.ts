@@ -21,6 +21,9 @@ export interface SseMessage {
   retry?: number;
 }
 
+/**
+ * Controller for monitoring Kafka.
+ */
 @Controller('/api/kafka-monitor')
 @UseGuards(RateLimitGuards)
 export class KafkaMonitorController {
@@ -32,6 +35,10 @@ export class KafkaMonitorController {
     @Inject('KAFKA_CONFIG') private readonly kafkaConfig: any
   ) {}
 
+  /**
+   * Gets the status of the Kafka connection.
+   * @returns The Kafka status.
+   */
   @Get('status')
   async getKafkaStatus() {
     try {
@@ -59,6 +66,10 @@ export class KafkaMonitorController {
     }
   }
 
+  /**
+   * Triggers a Kafka monitoring report and sends it via SSE.
+   * @returns A success message.
+   */
   @Post('trigger-report')
   async triggerReport() {
     try {
@@ -97,6 +108,10 @@ export class KafkaMonitorController {
     }
   }
 
+  /**
+   * Gets the health status of the Kafka connection.
+   * @returns The Kafka health status.
+   */
   @Get('health')
   async getHealthStatus() {
     try {
@@ -127,6 +142,10 @@ export class KafkaMonitorController {
     }
   }
 
+  /**
+   * Subscribes to Kafka monitoring events via SSE.
+   * @returns An observable of SSE messages.
+   */
   @Sse('events')
   monitoringEvents(): Observable<SseMessage> {
     this.logger.log('Client subscribed to Kafka monitoring SSE events');
@@ -173,6 +192,10 @@ export class KafkaMonitorController {
       );
   }
 
+  /**
+   * Gets the Kafka configuration.
+   * @returns The Kafka configuration.
+   */
   @Get('config')
   getKafkaConfig() {
     return {

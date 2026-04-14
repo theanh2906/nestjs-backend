@@ -2,6 +2,9 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { BehaviorSubject } from 'rxjs';
 import * as admin from 'firebase-admin';
 
+/**
+ * Service for handling push notifications.
+ */
 @Injectable()
 export class NotificationsService implements OnModuleInit {
   @Inject('FIREBASE_SERVICE_ACCOUNT')
@@ -9,6 +12,9 @@ export class NotificationsService implements OnModuleInit {
   private messaging: admin.messaging.Messaging;
   private _subscription = new BehaviorSubject<PushSubscription>(null);
 
+  /**
+   * The current push subscription.
+   */
   get subscription() {
     return this._subscription.value;
   }
@@ -19,14 +25,26 @@ export class NotificationsService implements OnModuleInit {
 
   private _token = new BehaviorSubject<string>('');
 
+  /**
+   * The current device token.
+   */
   get token() {
     return this._token.value;
   }
 
+  /**
+   * Sets the device token.
+   * @param token The device token.
+   */
   setToken(token: string) {
     this._token.next(token);
   }
 
+  /**
+   * Sends a push notification.
+   * @param payload The notification payload.
+   * @returns The response from Firebase Cloud Messaging.
+   */
   async sendPushNotification(payload: any) {
     try {
       const message: admin.messaging.Message = {

@@ -10,6 +10,9 @@ import {
 import { createHmac } from 'crypto';
 import { Request } from 'express';
 
+/**
+ * Controller for handling webhooks from various services.
+ */
 @Controller('/api/webhooks')
 export class WebhookController {
   private readonly logger = new Logger(WebhookController.name);
@@ -19,6 +22,14 @@ export class WebhookController {
   private readonly gitlabSecret = 'your-gitlab-webhook-secret';
   private readonly bitbucketSecret = 'your-bitbucket-webhook-secret';
 
+  /**
+   * Handles webhooks from GitHub.
+   * @param signature The GitHub webhook signature.
+   * @param event The GitHub event type.
+   * @param payload The webhook payload.
+   * @param request The Express request object.
+   * @returns The result of handling the webhook.
+   */
   @Post('github')
   async handleGithubWebhook(
     @Headers('x-hub-signature-256') signature: string,
@@ -43,6 +54,13 @@ export class WebhookController {
     }
   }
 
+  /**
+   * Handles webhooks from GitLab.
+   * @param token The GitLab webhook token.
+   * @param event The GitLab event type.
+   * @param payload The webhook payload.
+   * @returns The result of handling the webhook.
+   */
   @Post('gitlab')
   async handleGitlabWebhook(
     @Headers('x-gitlab-token') token: string,
@@ -68,6 +86,14 @@ export class WebhookController {
     }
   }
 
+  /**
+   * Handles webhooks from Bitbucket.
+   * @param signature The Bitbucket webhook signature.
+   * @param event The Bitbucket event type.
+   * @param payload The webhook payload.
+   * @param request The Express request object.
+   * @returns The result of handling the webhook.
+   */
   @Post('bitbucket')
   async handleBitbucketWebhook(
     @Headers('x-hub-signature') signature: string,

@@ -13,6 +13,9 @@ export interface FileChunk {
   fileSize: number;
 }
 
+/**
+ * Service for handling file operations.
+ */
 @Injectable()
 export class FileService extends BaseService implements OnModuleInit {
   protected readonly FOLDER_PATH = process.cwd() + '/uploads';
@@ -22,6 +25,11 @@ export class FileService extends BaseService implements OnModuleInit {
     // await this.createZipFromFolder('C:\\Notes');
   }
 
+  /**
+   * Creates a zip file from a list of files.
+   * @param files The files to include in the zip.
+   * @returns A buffer containing the zip file data.
+   */
   async createZip(
     files: { buffer: Buffer; originalName: string }[]
   ): Promise<Buffer> {
@@ -32,6 +40,11 @@ export class FileService extends BaseService implements OnModuleInit {
     return zip.toBuffer();
   }
 
+  /**
+   * Creates a zip file from a folder.
+   * @param folderPath The path to the folder to zip.
+   * @returns The path to the created zip file.
+   */
   async createZipFromFolder(folderPath: string): Promise<string> {
     const zip = new AdmZip();
     const fullPath = path.resolve(folderPath); // Resolve relative paths
@@ -59,6 +72,10 @@ export class FileService extends BaseService implements OnModuleInit {
     }
   }
 
+  /**
+   * Deletes a file.
+   * @param fileName The name of the file to delete.
+   */
   async deleteFile(fileName: string) {
     const fullPath = path.resolve(`${this.FOLDER_PATH}/${fileName}`); // Resolve relative paths
 
@@ -74,9 +91,9 @@ export class FileService extends BaseService implements OnModuleInit {
   }
 
   /**
-   * Get file information including size and path
-   * @param fileName Name of the file to get info for
-   * @returns Object with file information or null if file doesn't exist
+   * Gets information about a file, including its size and path.
+   * @param filePath The path to the file.
+   * @returns An object with file information, or null if the file doesn't exist.
    */
   async getFileInfo(
     filePath: string
@@ -100,8 +117,9 @@ export class FileService extends BaseService implements OnModuleInit {
   }
 
   /**
-   * Stream a file in chunks
-   * @returns AsyncGenerator that yields file chunks
+   * Streams a file in chunks.
+   * @param chunkSize The size of each chunk.
+   * @returns An async generator that yields file chunks.
    */
   async *streamFileInChunks(
     chunkSize: number = this.DEFAULT_CHUNK_SIZE
@@ -148,9 +166,9 @@ export class FileService extends BaseService implements OnModuleInit {
   }
 
   /**
-   * Create a readable stream from a file
-   * @param fileName Name of the file to stream
-   * @returns Readable stream of the file
+   * Creates a readable stream from a file.
+   * @param fileName The name of the file to stream.
+   * @returns A readable stream of the file.
    */
   createFileReadStream(fileName: string): fs.ReadStream {
     const fullPath = path.resolve(`${this.FOLDER_PATH}/${fileName}`);

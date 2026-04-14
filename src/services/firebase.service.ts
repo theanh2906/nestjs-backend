@@ -13,6 +13,9 @@ import fs from 'node:fs';
 import path from 'path';
 import { FileService } from './file.service';
 
+/**
+ * Service for interacting with Firebase services.
+ */
 @Injectable()
 export class FirebaseService extends BaseService implements OnModuleInit {
   protected COLLECTION_NAME = '';
@@ -25,6 +28,10 @@ export class FirebaseService extends BaseService implements OnModuleInit {
   @Inject() private readonly utilsService: UtilsService;
   @Inject() private readonly fileService: FileService;
 
+  /**
+   * Fetches data from the specified collection.
+   * @returns The data from the collection.
+   */
   async fetchData(): Promise<any> {
     const snapshot = await this.database
       .ref(this.COLLECTION_NAME)
@@ -33,14 +40,27 @@ export class FirebaseService extends BaseService implements OnModuleInit {
     return snapshot.val();
   }
 
+  /**
+   * Modifies data in the specified collection.
+   * @param data The data to add or modify.
+   */
   async modifyData(data: any): Promise<void> {
     await this.database.ref(this.COLLECTION_NAME + `/${uuid()}`).set(data);
   }
 
+  /**
+   * Deletes data from the specified collection.
+   * @param id The ID of the data to delete.
+   */
   async deleteData(id: string): Promise<any> {
     await this.database.ref(this.COLLECTION_NAME + `/${id}`).remove();
   }
 
+  /**
+   * Uploads a file to Firebase Storage.
+   * @param file The file to upload.
+   * @returns The public URL of the uploaded file.
+   */
   async uploadFilesToStorage(file: Express.Multer.File): Promise<string> {
     const fileName = file.originalname;
     const fileUpload = this.bucket.file(fileName);
@@ -54,6 +74,10 @@ export class FirebaseService extends BaseService implements OnModuleInit {
     return fileUpload.publicUrl();
   }
 
+  /**
+   * Gets a list of all files in the Firebase Storage bucket.
+   * @returns A list of files.
+   */
   async getAllFiles() {
     const files = await this.bucket.getFiles({
       includeTrailingDelimiter: true,
@@ -62,6 +86,11 @@ export class FirebaseService extends BaseService implements OnModuleInit {
     return this.utilsService.formatStoragePayload(files);
   }
 
+  /**
+   * Creates a folder in Firebase Storage.
+   * @param folderName The name of the folder to create.
+   * @returns A success message.
+   */
   async createFolder(folderName: string): Promise<string> {
     try {
       // Ensure the folder name ends with '/'
@@ -88,6 +117,10 @@ export class FirebaseService extends BaseService implements OnModuleInit {
     }
   }
 
+  /**
+   * Deletes files from Firebase Storage.
+   * @param fileNames The names of the files to delete.
+   */
   async deleteFiles(fileNames: string[]) {
     try {
       const deletePromises = fileNames.map((fileName) =>
@@ -101,6 +134,10 @@ export class FirebaseService extends BaseService implements OnModuleInit {
     }
   }
 
+  /**
+   * Synchronizes a local folder with Firebase Storage by creating a zip file and uploading it.
+   * @param folderPath The path to the local folder to synchronize.
+   */
   async handleFileSync(folderPath: string): Promise<void> {
     try {
       // Create a zip file from the folder
@@ -143,6 +180,10 @@ export class FirebaseService extends BaseService implements OnModuleInit {
     }
   }
 
+  /**
+   * Gets a list of all collections in the Firebase Realtime Database.
+   * @returns A list of collection names.
+   */
   async getAllCollections() {
     return this.database
       .ref()
@@ -156,6 +197,11 @@ export class FirebaseService extends BaseService implements OnModuleInit {
       });
   }
 
+  /**
+   * Gets the data for a specific collection.
+   * @param collectionName The name of the collection.
+   * @returns The data for the collection.
+   */
   async getCollectionData(collectionName: string) {
     return this.database.ref(collectionName).once('value');
   }

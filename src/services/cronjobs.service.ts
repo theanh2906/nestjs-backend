@@ -1,24 +1,40 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { FirebaseService } from './firebase.service';
+import { SchedulerManagerService } from './scheduler-manager.service';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+/**
+ * Service for managing scheduled cron jobs.
+ */
 @Injectable()
 export class CronJobsService implements OnModuleInit {
   private readonly logger = new Logger(CronJobsService.name);
   @Inject() private readonly firebaseService: FirebaseService;
+  @Inject() private readonly schedulerManager: SchedulerManagerService;
 
-  // Trigger cron jobs when the app restarts
+  /**
+   * Initializes the module and triggers initial backups.
+   */
   async onModuleInit() {
     await this.backupFirebaseToVolume();
     await this.backupFirebaseStorageToVolume();
   }
 
+  /**
+   * Cron job to backup Firebase Realtime Database to a local volume.
+   * Runs every hour.
+   */
   @Cron('0 */1 * * *', {
     name: 'backupFirebaseDatabase',
   })
   async backupFirebaseToVolume() {
+    if (!this.schedulerManager.isEnabled('backupFirebaseDatabase')) {
+      this.logger.debug('Firebase DB backup scheduler is disabled, skipping');
+      return;
+    }
+
     const environment = process.env.NODE_ENV || 'local';
     this.logger.log(
       `Starting Firebase DB backup in ${environment} environment...`
@@ -64,6 +80,7 @@ export class CronJobsService implements OnModuleInit {
       this.logger.log(
         `Environment: ${environment}, Collections backed up: ${collections.length}`
       );
+      this.schedulerManager.updateLastRun('backupFirebaseDatabase');
     } catch (error) {
       this.logger.error(
         `Firebase DB backup failed in ${environment} environment: ${error.message}`,
@@ -72,10 +89,21 @@ export class CronJobsService implements OnModuleInit {
     }
   }
 
+  /**
+   * Cron job to backup Firebase Storage to a local volume.
+   * Runs every hour.
+   */
   @Cron('0 */1 * * *', {
     name: 'backupFirebaseStorage',
   })
   async backupFirebaseStorageToVolume() {
+    if (!this.schedulerManager.isEnabled('backupFirebaseStorage')) {
+      this.logger.debug(
+        'Firebase Storage backup scheduler is disabled, skipping'
+      );
+      return;
+    }
+
     const environment = process.env.NODE_ENV || 'local';
     this.logger.log(
       `Starting Firebase Storage backup in ${environment} environment...`
@@ -203,6 +231,7 @@ export class CronJobsService implements OnModuleInit {
       this.logger.log(
         `Environment: ${environment}, Storage path: ${storagePath}`
       );
+      this.schedulerManager.updateLastRun('backupFirebaseStorage');
     } catch (error) {
       this.logger.error(
         `Firebase Storage backup failed in ${environment} environment: ${error.message}`,

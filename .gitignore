@@ -63,3 +63,6 @@ data/
 serviceAccountKey.json
 
 output.json
+
+# ClaudeKit
+.claude

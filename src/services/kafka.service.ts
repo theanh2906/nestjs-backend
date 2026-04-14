@@ -54,6 +54,9 @@ export interface TopicConfig {
   }>;
 }
 
+/**
+ * Service for interacting with Kafka.
+ */
 @Injectable()
 export class KafkaService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(KafkaService.name);
@@ -122,7 +125,7 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Connect to Kafka cluster
+   * Connects to the Kafka cluster.
    */
   async connect(): Promise<void> {
     try {
@@ -137,7 +140,7 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Disconnect from Kafka cluster
+   * Disconnects from the Kafka cluster.
    */
   async disconnect(): Promise<void> {
     try {
@@ -160,14 +163,17 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Check if service is connected to Kafka
+   * Checks if the service is connected to Kafka.
+   * @returns True if connected, false otherwise.
    */
   isKafkaConnected(): boolean {
     return this.isConnected;
   }
 
   /**
-   * Publish messages to a Kafka topic
+   * Publishes messages to a Kafka topic.
+   * @param options The options for producing messages.
+   * @returns The result of the send operation.
    */
   async publishMessage(options: ProduceMessageOptions): Promise<any> {
     try {
@@ -195,7 +201,11 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Publish a single message to a Kafka topic
+   * Publishes a single message to a Kafka topic.
+   * @param topic The topic to publish to.
+   * @param message The message to publish.
+   * @param key The key of the message.
+   * @param headers The headers of the message.
    */
   async publishSingleMessage(
     topic: string,
@@ -211,7 +221,9 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Subscribe to a Kafka topic and consume messages
+   * Subscribes to a Kafka topic and consumes messages.
+   * @param options The options for consuming messages.
+   * @param messageHandler The handler for incoming messages.
    */
   async consumeMessages(
     options: ConsumeMessageOptions,
@@ -263,7 +275,8 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Stop consuming messages for a specific consumer group
+   * Stops consuming messages for a specific consumer group.
+   * @param groupId The ID of the consumer group to stop.
    */
   async stopConsumer(groupId: string): Promise<void> {
     try {
@@ -282,7 +295,8 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Create a new Kafka topic
+   * Creates a new Kafka topic if it doesn't already exist.
+   * @param config The configuration for the topic.
    */
   async createTopicIfNotExists(config: TopicConfig): Promise<void> {
     try {
@@ -318,7 +332,8 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Delete a Kafka topic
+   * Deletes a Kafka topic.
+   * @param topic The name of the topic to delete.
    */
   async deleteTopic(topic: string): Promise<void> {
     try {
@@ -338,7 +353,8 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * List all topics in the Kafka cluster
+   * Lists all topics in the Kafka cluster.
+   * @returns A list of topic names.
    */
   async listTopics(): Promise<string[]> {
     try {
@@ -356,7 +372,9 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Get metadata for specific topics
+   * Gets metadata for specific topics.
+   * @param topics The names of the topics to get metadata for.
+   * @returns The metadata for the topics.
    */
   async getTopicMetadata(
     topics?: string[]
@@ -378,7 +396,8 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * List all consumer groups
+   * Lists all consumer groups in the Kafka cluster.
+   * @returns A list of consumer groups.
    */
   async listConsumerGroups(): Promise<{
     groups: Array<{ groupId: string; protocolType: string }>;
@@ -398,7 +417,9 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Get detailed information about specific consumer groups
+   * Gets detailed information about specific consumer groups.
+   * @param groupIds The IDs of the consumer groups to describe.
+   * @returns Detailed information about the consumer groups.
    */
   async describeConsumerGroups(
     groupIds: string[]
@@ -420,7 +441,10 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Get consumer group offsets
+   * Gets the offsets for a consumer group.
+   * @param groupId The ID of the consumer group.
+   * @param topics The topics to get offsets for.
+   * @returns The offsets for the consumer group.
    */
   async getConsumerGroupOffsets(
     groupId: string,
@@ -448,7 +472,10 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Reset consumer group offsets
+   * Resets the offsets for a consumer group.
+   * @param groupId The ID of the consumer group.
+   * @param topic The topic to reset offsets for.
+   * @param earliest Whether to reset to the earliest offset.
    */
   async resetConsumerGroupOffsets(
     groupId: string,
@@ -479,7 +506,9 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Create a consumer group if it doesn't exist
+   * Creates a consumer group if it doesn't already exist.
+   * @param groupId The ID of the consumer group to create.
+   * @param topic The topic to associate with the consumer group.
    */
   async createConsumerGroupIfNotExists(
     groupId: string,
@@ -541,7 +570,8 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Delete a consumer group
+   * Deletes a consumer group.
+   * @param groupId The ID of the consumer group to delete.
    */
   async deleteConsumerGroup(groupId: string): Promise<void> {
     try {
@@ -558,7 +588,8 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Get cluster information
+   * Gets information about the Kafka cluster.
+   * @returns Information about the Kafka cluster.
    */
   async getClusterInfo(): Promise<any> {
     try {
@@ -581,7 +612,8 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Health check for Kafka connection
+   * Performs a health check on the Kafka connection.
+   * @returns The health status of the Kafka connection.
    */
   async healthCheck(): Promise<{ status: string; details: any }> {
     try {
